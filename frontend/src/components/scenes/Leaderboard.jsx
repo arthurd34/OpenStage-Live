@@ -1,4 +1,5 @@
 import React from 'react';
+import {t} from "../../utils/i18n.js";
 
 const Leaderboard = ({ scores, ui }) => {
     // Sort scores from highest to lowest
@@ -38,7 +39,7 @@ const Leaderboard = ({ scores, ui }) => {
                                 </span>
                                 <span style={{ fontWeight: index < 3 ? 'bold' : 'normal' }}>{name}</span>
                             </div>
-                            <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{score} <small>pts</small></span>
+                            <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{score} <small>{t(ui, 'POINTS_SHORT')}</small></span>
                         </div>
                     );
                 })}

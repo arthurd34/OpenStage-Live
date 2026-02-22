@@ -18,6 +18,7 @@ const translations = {
         PROPOSAL_SEND: "Envoyer",
         PROPOSAL_EMPTY_HISTORY: "Vous n'avez pas encore envoyé de proposition.",
         PROPOSAL_WINNER_ICON: "🏆",
+        PROPOSAL_DISPLAY_TITLE: "À l'écran :",
         WAITING_FOR_PROPOSALS: "En attente des propositions des joueurs...",
 
         // --- WAITING SCENE ---
@@ -69,8 +70,11 @@ const translations = {
 
         // --- ADMIN ACCESS & SCORING ---
         ADMIN_SCORES_TITLE: "Attribution des Points",
-        CONFIRM_RESET_SCORES: "Voulez-vous vraiment remettre tous les scores à zéro ?",
+        ADMIN_SCORES_VISIBILITY: "Afficher le classement sur les téléphones",
         ADMIN_RESET_BTN: "Réinitialiser",
+        CONFIRM_RESET_SCORES: "Voulez-vous vraiment remettre tous les scores à zéro ?",
+        POINTS_SHORT: "pts",
+        SCORE_CORRECTION_DESC: "Correction de score (-1)",
 
         // --- ADMIN SHOW MANAGEMENT ---
         ADMIN_SHOW_CONFIG_TITLE: "Configuration du Show",
@@ -145,6 +149,7 @@ const translations = {
         PROPOSAL_SEND: "Send",
         PROPOSAL_EMPTY_HISTORY: "You haven't sent any proposals yet.",
         PROPOSAL_WINNER_ICON: "🏆",
+        PROPOSAL_DISPLAY_TITLE: "On screen:",
         WAITING_FOR_PROPOSALS: "Waiting for players' proposals...",
 
         // --- WAITING SCENE ---
@@ -154,7 +159,7 @@ const translations = {
 
         // --- OVERLAYS & ERRORS ---
         CONNECTION_LOST: "Connection lost",
-        REconnecting: "Reconnecting...",
+        RECONNECTING: "Reconnecting...",
         REFRESH_IN: "Automatic refresh in",
         REFRESH_NOW: "Refresh now",
         ERROR_NAME_TAKEN: "This name is already taken.",
@@ -196,8 +201,11 @@ const translations = {
 
         // --- ADMIN ACCESS & SCORING ---
         ADMIN_SCORES_TITLE: "Points Attribution",
-        CONFIRM_RESET_SCORES: "Are you sure you want to reset all scores to zero?",
+        ADMIN_SCORES_VISIBILITY: "Show ranking on phones",
         ADMIN_RESET_BTN: "Reset",
+        CONFIRM_RESET_SCORES: "Are you sure you want to reset all scores to zero?",
+        POINTS_SHORT: "pts",
+        SCORE_CORRECTION_DESC: "Score correction (-1)",
 
         // --- ADMIN SHOW MANAGEMENT ---
         ADMIN_SHOW_CONFIG_TITLE: "Show Configuration",

@@ -14,7 +14,9 @@ const ScoringSystem = ({ state, users, ui, onAddPoints, onReset, onToggleVisibil
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                 <h3 style={{ margin: 0 }}>🏆 {t(ui, 'ADMIN_SCORES_TITLE')}</h3>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.8rem' }}>Afficher le classement sur les téléphones</span>
+                    <span style={{ fontSize: '0.8rem' }}>
+                        {t(ui, 'ADMIN_SCORES_VISIBILITY')}
+                    </span>
                     <label className="switch">
                         <input
                             type="checkbox"
@@ -28,6 +30,12 @@ const ScoringSystem = ({ state, users, ui, onAddPoints, onReset, onToggleVisibil
 
             {/* Players list */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {users.length === 0 && (
+                    <p style={{ textAlign: 'center', opacity: 0.5 }}>
+                        {t(ui, 'NO_PLAYERS_CONNECTED')}
+                    </p>
+                )}
+
                 {users.map(u => (
                     <div key={u.socketId} className="user-row" style={{
                         background: 'rgba(255,255,255,0.03)',
@@ -39,7 +47,7 @@ const ScoringSystem = ({ state, users, ui, onAddPoints, onReset, onToggleVisibil
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <span style={{ fontWeight: 'bold' }}>{u.name}</span>
                             <span style={{ fontSize: '1.2rem', color: '#f59e0b' }}>
-                                {scores[u.name] || 0} <small>pts</small>
+                                {scores[u.name] || 0} <small>{t(ui, 'POINTS_SHORT')}</small>
                             </span>
                         </div>
 
@@ -58,6 +66,7 @@ const ScoringSystem = ({ state, users, ui, onAddPoints, onReset, onToggleVisibil
                                 className="btn-danger btn-small"
                                 style={{ marginLeft: '10px' }}
                                 onClick={() => onAddPoints(u.name, -1)}
+                                title={t(ui, 'SCORE_CORRECTION_DESC')}
                             >
                                 -1
                             </button>

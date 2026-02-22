@@ -5,7 +5,7 @@ const AdminHeader = ({ state, ui, onLogout }) => (
     <header className="admin-header-container" style={{
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center', // Fix vertical centering
+        alignItems: 'center',
         padding: '10px 20px',
         background: 'rgba(255,255,255,0.05)',
         borderRadius: '12px',
@@ -35,7 +35,7 @@ const AdminHeader = ({ state, ui, onLogout }) => (
         <button
             onClick={onLogout}
             className="btn-danger"
-            style={{ margin: 0 }} // Remove default browser margins
+            style={{ margin: 0 }}
         >
             {t(ui, 'ADMIN_BTN_LOGOUT')}
         </button>
