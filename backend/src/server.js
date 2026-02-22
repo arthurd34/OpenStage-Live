@@ -46,7 +46,10 @@ let state = savedState || {
         mode: 'PUBLIC', // 'PUBLIC' or 'WHITELIST'
         publicCode: '1234',
         whitelist: [] // { code: 'ABC', used: false, playerName: '' }
-    }
+    },
+    // New: Global scoring state
+    scores: {}, // { "playerName": scoreValue }
+    isScoreVisible: false // New: Control scoreboard visibility for players
 };
 
 if (!state.adminTokens) state.adminTokens = [];
@@ -54,10 +57,15 @@ if (!state.adminTokens) state.adminTokens = [];
 if (!state.accessConfig) {
     state.accessConfig = { mode: 'PUBLIC', publicCode: '1234', whitelist: [] };
 }
+// Ensure scores object exists
+if (!state.scores) state.scores = {};
+// Ensure visibility property exists for saved states
+if (state.isScoreVisible === undefined) state.isScoreVisible = false;
 
 let showConfig = {
     name: "No show loaded",
     lang: "fr",
+    hasPoints: false, // Default: no points unless specified in show JSON
     scenes: [{ id: 'OFFLINE', title: "Offline", type: "WAITING", params: {} }]
 };
 
@@ -95,7 +103,11 @@ const getSyncData = () => {
         // Public only needs to know the mode and the allow status
         allowNewJoins: state.allowNewJoins,
         accessMode: state.accessConfig.mode,
-        showName: showConfig.name || ''
+        showName: showConfig.name || '',
+        // Scoring info based on current show config
+        hasPoints: showConfig.hasPoints || false,
+        scores: state.scores,
+        isScoreVisible: state.isScoreVisible // Send visibility status to all clients
     };
 
     if (!state.isLive) {
@@ -213,6 +225,47 @@ io.on('connection', (socket) => {
         adminManager.updateAccessConfig(socket, io, data, getContext());
     }));
 
+    // --- SCORING ACTIONS ---
+    /**
+     * Allows admin to add/subtract points from a specific player.
+     * Only works if current show hasPoints: true.
+     */
+    socket.on('admin_add_points', adminAction((data) => {
+        if (!showConfig.hasPoints) return;
+
+        const { playerName, amount } = data;
+        if (!playerName) return;
+
+        if (!state.scores[playerName]) state.scores[playerName] = 0;
+        state.scores[playerName] += amount;
+
+        persist();
+        // Sync new scores to everyone
+        io.emit('sync_state', getSyncData());
+        refreshAdminLists();
+    }));
+
+    /**
+     * Reset all scores to zero.
+     */
+    socket.on('admin_reset_scores', adminAction(() => {
+        state.scores = {};
+        persist();
+        io.emit('sync_state', getSyncData());
+        refreshAdminLists();
+    }));
+
+    /**
+     * Toggle visibility of the leaderboard for players.
+     */
+    socket.on('admin_toggle_score_visibility', adminAction((data) => {
+        state.isScoreVisible = data.value;
+        persist();
+        // Sync visibility status to everyone
+        io.emit('sync_state', getSyncData());
+        refreshAdminLists();
+    }));
+
     socket.on('admin_get_shows', adminAction(async () => {
         const shows = await ShowManager.listShows();
         socket.emit('admin_shows_list', shows);
@@ -229,6 +282,8 @@ io.on('connection', (socket) => {
         state.activeShowId = data.showId;
         state.currentSceneIndex = 0;
         state.isLive = false;
+        // Optionally reset scores on show load
+        // state.scores = {};
         persist();
         io.emit('sync_state', getSyncData());
     }));
@@ -342,7 +397,8 @@ io.on('connection', (socket) => {
             token: userToken,
             connected: true,
             proposals: [],
-            entryCode: entryCode
+            entryCode: entryCode,
+            score: 0
         };
 
         state.pendingRequests.push(req);

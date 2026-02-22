@@ -6,8 +6,12 @@ import { t } from '../utils/i18n';
 import ConnectionScene from '../components/scenes/ConnectionScene';
 import ProposalScene from '../components/scenes/ProposalScene';
 import WaitingScene from '../components/scenes/WaitingScene';
+import Leaderboard from '../components/scenes/Leaderboard';
 import Footer from '../components/Footer';
 import ConnectionErrorOverlay from '../components/overlays/ConnectionErrorOverlay';
+
+// Ensure the CSS provided below is in your stylesheet
+import './PublicView.css';
 
 const socketUrl = import.meta.env.VITE_BACKEND_URL;
 const socket = io(socketUrl, { transports: ["websocket"] });
@@ -15,7 +19,7 @@ const socket = io(socketUrl, { transports: ["websocket"] });
 const PublicView = () => {
     // --- STATES ---
     const [name, setName] = useState('');
-    const [entryCode, setEntryCode] = useState(''); // New: Access code state
+    const [entryCode, setEntryCode] = useState('');
     const [status, setStatus] = useState('idle');
     const [message, setMessage] = useState('');
     const [gameState, setGameState] = useState(null);
@@ -23,13 +27,42 @@ const PublicView = () => {
     const [isConnected, setIsConnected] = useState(socket.connected);
     const [countdown, setCountdown] = useState(15);
 
+    // --- ANIMATION STATES ---
+    const [scoreDiff, setScoreDiff] = useState(null);
+    const [animateScore, setAnimateScore] = useState(false);
+    const prevScoreRef = useRef(0);
+
     const timerRef = useRef(null);
     const nameRef = useRef('');
     const ui = gameState?.ui || {};
 
+    // --- DERIVED STATE: SCORE & VISIBILITY ---
+    const myScore = gameState?.scores?.[name] || 0;
+    const showPoints = gameState?.hasPoints || false;
+    const isScoreVisible = gameState?.isScoreVisible || false;
+
+    // --- EFFECT: DETECT SCORE CHANGE & TRIGGER ANIMATION ---
+    useEffect(() => {
+        if (myScore !== prevScoreRef.current) {
+            const diff = myScore - prevScoreRef.current;
+
+            // Trigger animation for any change (positive or negative)
+            setScoreDiff(diff);
+            setAnimateScore(true);
+
+            // Reset animation states after duration
+            const timeout = setTimeout(() => {
+                setAnimateScore(false);
+                setScoreDiff(null);
+            }, 500);
+
+            prevScoreRef.current = myScore;
+            return () => clearTimeout(timeout);
+        }
+    }, [myScore]);
+
     // --- EFFECT: URL CODE PARSING ---
     useEffect(() => {
-        // Automatically grab the 'code' parameter from the URL if it exists
         const params = new URLSearchParams(window.location.search);
         const codeFromUrl = params.get('code');
         if (codeFromUrl) {
@@ -88,6 +121,10 @@ const PublicView = () => {
                 localStorage.setItem('player_name', finalName);
                 if (data.name) setName(data.name);
                 setMessage('');
+                // Initialize score ref on approval
+                if (gameState?.scores?.[finalName]) {
+                    prevScoreRef.current = gameState.scores[finalName];
+                }
             } else {
                 if (data.transData) {
                     setMessage({ key: data.reason, data: data.transData });
@@ -123,14 +160,11 @@ const PublicView = () => {
     const handleJoin = (e) => {
         if (e) e.preventDefault();
         if (!name.trim()) return;
-
         setMessage('');
         setStatus('pending');
-
-        // Emitting the name AND the access code (from input or URL)
         socket.emit('join_request', {
             name: name.trim(),
-            entryCode: entryCode.trim().toUpperCase(), // Send access code
+            entryCode: entryCode.trim().toUpperCase(),
             isReconnect: false
         });
     };
@@ -141,14 +175,10 @@ const PublicView = () => {
             <div className="app-container">
                 <div className="main-content">
                     <ConnectionScene
-                        name={name}
-                        setName={setName}
-                        entryCode={entryCode}
-                        setEntryCode={setEntryCode}
-                        handleJoin={handleJoin}
-                        status={status}
-                        message={message}
-                        ui={ui}
+                        name={name} setName={setName}
+                        entryCode={entryCode} setEntryCode={setEntryCode}
+                        handleJoin={handleJoin} status={status}
+                        message={message} ui={ui}
                         isLive={gameState?.isLive}
                         showName={gameState?.showName}
                     />
@@ -158,7 +188,7 @@ const PublicView = () => {
         );
     }
 
-    // --- RENDER: SHOW NOT STARTED (SECURITY) ---
+    // --- RENDER: SHOW NOT STARTED ---
     if (gameState && gameState.isLive === false) {
         return (
             <div className="app-container">
@@ -188,16 +218,38 @@ const PublicView = () => {
         <div className="app-container">
             {!isConnected && (
                 <ConnectionErrorOverlay
-                    ui={ui}
-                    countdown={countdown}
+                    ui={ui} countdown={countdown}
                     onRefresh={() => window.location.reload()}
                 />
             )}
 
             <div className="main-content">
-                <div className="card">
+                {/* --- LEADERBOARD OVERLAY --- */}
+                {showPoints && isScoreVisible && (
+                    <Leaderboard scores={gameState.scores} ui={ui} />
+                )}
+
+                <div className={`card ${animateScore ? (scoreDiff > 0 ? 'score-pop-up' : 'score-pop-down') : ''}`}>
                     <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h3 style={{ margin: 0 }}>{name}</h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <h3 style={{ margin: 0 }}>{name}</h3>
+
+                            {/* --- SCORE BADGE --- */}
+                            {showPoints && (
+                                <div style={{ position: 'relative' }}>
+                                    <span className={`score-badge ${animateScore ? 'animate' : ''}`}>
+                                        {myScore} pts
+                                    </span>
+
+                                    {/* FLOATING TEXT: Displays +X or -X based on change */}
+                                    {scoreDiff !== null && (
+                                        <span className={`score-floating-text ${scoreDiff > 0 ? 'positive' : 'negative'}`}>
+                                            {scoreDiff > 0 ? `+${scoreDiff}` : scoreDiff}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                         <div className="status-dot" style={{
                             background: isConnected ? '#2ecc71' : '#e74c3c',
                             width: 10, height: 10, borderRadius: '50%'

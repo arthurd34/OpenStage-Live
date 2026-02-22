@@ -1,10 +1,15 @@
 const sceneManager = require('./scenes');
 
+/**
+ * Admin Handlers Module
+ * Maintains all administrative actions including user management,
+ * access control, and scoring.
+ */
 module.exports = {
     // --- ACCESS CONTROL MANAGEMENT ---
     updateAccessConfig: (socket, io, data, context) => {
-        const { accessConfig } = data;
-        const { setAccessConfig, refreshAdminLists } = context;
+        const {accessConfig} = data;
+        const {setAccessConfig, refreshAdminLists} = context;
 
         if (accessConfig) {
             // Update global state and trigger persistence
@@ -16,7 +21,7 @@ module.exports = {
     },
 
     approveUser: (socket, io, data, context) => {
-        const { socketId, welcomeMessage } = data;
+        const {socketId, welcomeMessage} = data;
         const {
             pendingRequests,
             activeUsers,
@@ -30,7 +35,7 @@ module.exports = {
         if (userReq) {
             // Remove from pending and add to active
             const newPending = pendingRequests.filter(r => r.socketId !== socketId);
-            const newActive = [...activeUsers, { ...userReq, connected: true }];
+            const newActive = [...activeUsers, {...userReq, connected: true}];
 
             // Using setters triggers persist() in server.js
             setPendingRequests(newPending);
@@ -46,7 +51,7 @@ module.exports = {
     },
 
     kickUser: (socket, io, data, context) => {
-        const { socketId, reason, isRefusal } = data;
+        const {socketId, reason, isRefusal} = data;
         const {
             activeUsers,
             pendingRequests,
@@ -96,14 +101,22 @@ module.exports = {
     },
 
     renameUser: (socket, io, data, context) => {
-        const { socketId, newName } = data;
-        const { activeUsers, refreshAdminLists, setActiveUsers } = context;
+        const {socketId, newName} = data;
+        const {activeUsers, refreshAdminLists, setActiveUsers, scores} = context;
 
         const user = activeUsers.find(u => u.socketId === socketId);
         if (user) {
-            // Update the name and trigger persistence
+            const oldName = user.name;
+
+            // Update the name in the scores object if it exists
+            if (scores[oldName] !== undefined) {
+                scores[newName] = scores[oldName];
+                delete scores[oldName];
+            }
+
+            // Update the name in the users list
             const newActive = activeUsers.map(u =>
-                u.socketId === socketId ? { ...u, name: newName } : u
+                u.socketId === socketId ? {...u, name: newName} : u
             );
 
             setActiveUsers(newActive);
@@ -111,5 +124,45 @@ module.exports = {
             io.to(socketId).emit('name_updated', newName);
             refreshAdminLists();
         }
+    },
+
+
+    // --- SCORING MANAGEMENT ---
+
+    /**
+     * Adds or removes points for a specific player.
+     * Updates the global scores object and refreshes all clients.
+     */
+    addPoints: (socket, io, data, context) => {
+        const {playerName, amount} = data;
+        const {scores, refreshAdminLists, getSyncData} = context;
+
+        if (!playerName) return;
+
+        // Ensure player exists in scores object
+        if (scores[playerName] === undefined) {
+            scores[playerName] = 0;
+        }
+
+        scores[playerName] += amount;
+
+        // Persistence is handled by the server.js auto-save since context.scores is a reference
+        // We broadcast the new state to all clients
+        io.emit('sync_state', getSyncData());
+        refreshAdminLists();
+    },
+
+    /**
+     * Resets all player scores to zero.
+     */
+    resetScores: (socket, io, data, context) => {
+        const {refreshAdminLists, getSyncData} = context;
+
+        // We modify the scores object directly in the context
+        // To persist properly, we could use a setter if defined in server.js
+        context.scores = {};
+
+        io.emit('sync_state', getSyncData());
+        refreshAdminLists();
     }
 };

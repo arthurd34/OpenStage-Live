@@ -1,0 +1,52 @@
+.score-badge {
+    background: var(--primary);
+    color: white;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    display: inline-block;
+    box-shadow: 0 2px 10px rgba(0,212,255,0.3);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.score-badge.animate {
+    transform: scale(1.4);
+}
+
+/* Floating text logic */
+.score-floating-text {
+    position: absolute;
+    top: -20px;
+    right: 0;
+    font-weight: bold;
+    font-size: 1.4rem;
+    pointer-events: none;
+    animation: floatUpAndFade 1.8s forwards ease-out;
+}
+
+.score-floating-text.positive {
+    color: #2ecc71; /* Green for + points */
+}
+
+.score-floating-text.negative {
+    color: #e74c3c; /* Red for - points */
+}
+
+/* Card flash animations */
+.score-pop-up { animation: flashGreen 0.6s ease-out; }
+.score-pop-down { animation: flashRed 0.6s ease-out; }
+
+@keyframes floatUpAndFade {
+    0% { opacity: 0; transform: translateY(0) scale(0.5); }
+    20% { opacity: 1; transform: translateY(-15px) scale(1.2); }
+    100% { opacity: 0; transform: translateY(-50px) scale(1); }
+}
+
+@keyframes flashGreen {
+    50% { box-shadow: 0 0 25px rgba(46, 204, 113, 0.4); border-color: #2ecc71; }
+}
+
+@keyframes flashRed {
+    50% { box-shadow: 0 0 25px rgba(231, 76, 60, 0.4); border-color: #e74c3c; }
+}

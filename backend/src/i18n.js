@@ -66,6 +66,11 @@ const translations = {
         ADMIN_GENERATE_BULK: "Générer en masse",
         ADMIN_WHITELIST_FULL: "Plein",
 
+        // --- ADMIN ACCESS & SCORING ---
+        ADMIN_SCORES_TITLE: "Attribution des Points",
+        CONFIRM_RESET_SCORES: "Voulez-vous vraiment remettre tous les scores à zéro ?",
+        ADMIN_RESET_BTN: "Réinitialiser",
+
         // --- ADMIN SHOW MANAGEMENT ---
         ADMIN_SHOW_CONFIG_TITLE: "Configuration du Show",
         ADMIN_SELECT_SHOW: "Charger un spectacle :",
@@ -186,6 +191,11 @@ const translations = {
         ADMIN_NO_SELECTED_SCENE: "No active scene.",
         ADMIN_GENERATE_BULK: "Generate in bulk",
         ADMIN_WHITELIST_FULL: "Full",
+
+        // --- ADMIN ACCESS & SCORING ---
+        ADMIN_SCORES_TITLE: "Points Attribution",
+        CONFIRM_RESET_SCORES: "Are you sure you want to reset all scores to zero?",
+        ADMIN_RESET_BTN: "Reset",
 
         // --- ADMIN SHOW MANAGEMENT ---
         ADMIN_SHOW_CONFIG_TITLE: "Show Configuration",
