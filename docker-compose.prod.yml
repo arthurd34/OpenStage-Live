@@ -1,16 +1,27 @@
+version: '3.8'
+
 services:
   backend:
     build:
+      context: ./backend
       dockerfile: Dockerfile
     restart: always
     environment:
       - NODE_ENV=production
     ports:
       - "3000:3000"
+    volumes:
+      - openimpro_data:/app/db.json
+      - openimpro_shows:/app/shows
 
   frontend:
     build:
+      context: ./frontend
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "80:80" # Production port
+      - "80:80"
+
+volumes:
+  openimpro_data:
+  openimpro_shows:
