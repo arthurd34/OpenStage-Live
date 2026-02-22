@@ -87,12 +87,12 @@ if (state.activeShowId) {
 
 /**
  * Prepares synchronization data for clients.
+ * Dynamic: Injects Leaderboard scene if hasPoints is true.
  */
 const getSyncData = () => {
-    // Clone original scenes
     let playlist = [...showConfig.scenes];
 
-    // --- DYNAMIC: Auto-inject Leaderboard if hasPoints is true ---
+    // --- AUTO-INJECT LEADERBOARD SCENE ---
     if (showConfig.hasPoints) {
         playlist.push({
             id: 'AUTO_LEADERBOARD',
@@ -255,6 +255,30 @@ io.on('connection', (socket) => {
         refreshAdminLists();
     }));
 
+    // --- PROPOSALS LOGIC ---
+
+    socket.on('send_proposal', (data) => {
+        // Intercept Admin Manual Add
+        if (data && data.token && isValidAdmin(data.token)) {
+            const newProposal = {
+                id: crypto.randomBytes(8).toString('hex'),
+                userName: data.userName || "ADMIN",
+                text: data.text,
+                timestamp: new Date().toLocaleTimeString(),
+                isAdmin: true,
+                isWinner: false,
+                isDisplayed: false
+            };
+            state.allProposals.push(newProposal);
+            persist();
+            io.to('admin_room').emit('admin_sync_proposals', state.allProposals);
+            io.emit('sync_state', getSyncData());
+            return;
+        }
+        // Normal Player Proposal
+        sceneManager.handleEvent(socket, io, 'send_proposal', data, getContext());
+    });
+
     socket.on('admin_display_proposal', adminAction((data) => {
         const { id, value } = data;
         state.allProposals = state.allProposals.map(p => ({
@@ -262,7 +286,7 @@ io.on('connection', (socket) => {
             isDisplayed: p.id === id ? value : p.isDisplayed
         }));
         persist();
-        io.emit('admin_sync_proposals', state.allProposals);
+        io.to('admin_room').emit('admin_sync_proposals', state.allProposals);
         io.emit('sync_state', getSyncData());
     }));
 
@@ -273,9 +297,18 @@ io.on('connection', (socket) => {
             isWinner: p.id === id ? value : p.isWinner
         }));
         persist();
-        io.emit('admin_sync_proposals', state.allProposals);
+        io.to('admin_room').emit('admin_sync_proposals', state.allProposals);
         io.emit('sync_state', getSyncData());
     }));
+
+    socket.on('admin_delete_proposal', adminAction((data) => {
+        state.allProposals = state.allProposals.filter(p => p.id !== data.id);
+        persist();
+        io.to('admin_room').emit('admin_sync_proposals', state.allProposals);
+        io.emit('sync_state', getSyncData());
+    }));
+
+    // --- SHOWS & SYSTEM ---
 
     socket.on('admin_get_shows', adminAction(async () => {
         const shows = await ShowManager.listShows();
@@ -329,10 +362,14 @@ io.on('connection', (socket) => {
         io.emit('sync_state', getSyncData());
     }));
 
-    const sceneEvents = ['send_proposal', 'admin_approve_proposal', 'admin_delete_proposal', 'admin_clear_all_proposals'];
-    sceneEvents.forEach(event => {
-        socket.on(event, (data) => sceneManager.handleEvent(socket, io, event, data, getContext()));
-    });
+    socket.on('admin_clear_all_proposals', adminAction((data) => {
+        state.allProposals = [];
+        persist();
+        io.to('admin_room').emit('admin_sync_proposals', state.allProposals);
+        io.emit('sync_state', getSyncData());
+    }));
+
+    // --- JOIN & DISCONNECT ---
 
     socket.on('join_request', (data) => {
         if (!state.isLive && !data.isReconnect) {
