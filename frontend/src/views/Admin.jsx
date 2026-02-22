@@ -40,7 +40,7 @@ const AdminView = () => {
     useEffect(() => {
         // --- AUTH LISTENERS ---
         socket.on('login_success', (data) => {
-            alert("URL IS :"+ import.meta.env.VITE_BACKEND_URL);
+            console.log("URL IS :"+ import.meta.env.VITE_BACKEND_URL);
             setAuth(true);
             setToken(data.token);
             if (localStorage.getItem('admin_remember') === 'true') {
