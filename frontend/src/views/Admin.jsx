@@ -14,11 +14,13 @@ const socketUrl = import.meta.env.VITE_BACKEND_URL;
 const socket = io(socketUrl, {transports: ["websocket"]});
 
 const AdminView = () => {
+    // --- AUTH & SESSION STATE ---
     const [auth, setAuth] = useState(false);
     const [pass, setPass] = useState('');
     const [token, setToken] = useState(localStorage.getItem('admin_token'));
     const [rememberMe, setRememberMe] = useState(!!localStorage.getItem('admin_token'));
 
+    // --- GAME DATA STATE ---
     const [state, setState] = useState(null);
     const [requests, setRequests] = useState([]);
     const [users, setUsers] = useState([]);
@@ -30,46 +32,67 @@ const AdminView = () => {
 
     const fileInputRef = useRef(null);
     const newCodeInputRef = useRef(null);
+
+    // Derived state
     const ui = state?.ui || {};
     const accessConfig = state?.accessConfig || {mode: 'PUBLIC', publicCode: '', whitelist: []};
 
+    // --- SECURE EMIT HELPER ---
     const emitAdmin = useCallback((event, data = {}) => {
         socket.emit(event, {...data, token});
     }, [token]);
 
     useEffect(() => {
+        // Handle successful login
         socket.on('login_success', (data) => {
             setAuth(true);
             setToken(data.token);
-            if (localStorage.getItem('admin_remember') === 'true') localStorage.setItem('admin_token', data.token);
+            if (localStorage.getItem('admin_remember') === 'true') {
+                localStorage.setItem('admin_token', data.token);
+            }
             socket.emit('admin_get_shows', {token: data.token});
         });
 
+        // Handle login errors (Credentials, expired tokens, etc.)
+        socket.on('login_error', (msg) => {
+            alert(t(ui, msg) || msg);
+            localStorage.removeItem('admin_token');
+            setAuth(false);
+        });
+
+        // Global state sync
         socket.on('sync_state', (s) => {
             setState(s);
             if (s.allowNewJoins !== undefined) setAllowJoins(s.allowNewJoins);
         });
 
+        // Data listeners
         socket.on('admin_shows_list', setAvailableShows);
         socket.on('admin_pending_list', setRequests);
         socket.on('admin_user_list', setUsers);
         socket.on('admin_sync_proposals', setProposals);
+
+        // Connection status
         socket.on('connect', () => setIsConnected(true));
         socket.on('disconnect', () => setIsConnected(false));
 
+        // Auto-login attempt if token exists
         if (token && !auth) socket.emit('admin_login', {token});
 
         return () => {
             socket.off('login_success');
+            socket.off('login_error');
             socket.off('sync_state');
             socket.off('admin_shows_list');
             socket.off('admin_pending_list');
             socket.off('admin_user_list');
             socket.off('admin_sync_proposals');
+            socket.off('connect');
+            socket.off('disconnect');
         };
-    }, [auth, token]);
+    }, [auth, token, ui]); // Added ui to deps for translated alerts
 
-    // --- HANDLERS ---
+    // --- ACTION HANDLERS ---
     const handleLogin = (e) => {
         e.preventDefault();
         localStorage.setItem('admin_remember', rememberMe);
@@ -84,21 +107,27 @@ const AdminView = () => {
         formData.append('showZip', file);
         try {
             const response = await fetch(`${socketUrl}/admin/upload-show`, {
-                method: 'POST', body: formData, headers: {'x-admin-token': token}
+                method: 'POST',
+                body: formData,
+                headers: {'x-admin-token': token}
             });
             if (response.ok) {
                 emitAdmin('admin_get_shows');
                 alert(t(ui, 'ADMIN_UPLOAD_SUCCESS'));
             }
         } catch (err) {
-            console.error(err);
+            console.error("Upload failed:", err);
         } finally {
             setIsUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = "";
         }
     };
 
-    const updateAccessConfig = (newCfg) => emitAdmin('admin_update_access_config', {accessConfig: {...accessConfig, ...newCfg}});
+    const updateAccessConfig = (newCfg) => {
+        emitAdmin('admin_update_access_config', {
+            accessConfig: {...accessConfig, ...newCfg}
+        });
+    };
 
     const addWhitelistCode = () => {
         const code = newCodeInputRef.current.value.trim().toUpperCase();
@@ -108,21 +137,46 @@ const AdminView = () => {
         newCodeInputRef.current.value = "";
     };
 
-    if (!auth) return (<div className="card" style={{maxWidth: '400px', margin: '100px auto'}}>
+    // --- RENDER: LOGIN ---
+    if (!auth) return (
+        <div className="card" style={{maxWidth: '400px', margin: '100px auto'}}>
+            <h2>{t(ui, 'ADMIN_LOGIN_TITLE')}</h2>
             <form onSubmit={handleLogin}>
-                <input type="password" onChange={e => setPass(e.target.value)} className="admin-input"/>
-                <button type="submit" className="btn-primary">Login</button>
+                <input
+                    type="password"
+                    placeholder={t(ui, 'ADMIN_INPUT_PASS_PH')}
+                    onChange={e => setPass(e.target.value)}
+                    autoFocus
+                    className="admin-input"
+                />
+                <div className="remember-container">
+                    <span>{t(ui, 'ADMIN_REMEMBER_ME')}</span>
+                    <label className="switch">
+                        <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)}/>
+                        <span className="slider round"></span>
+                    </label>
+                </div>
+                <button className="btn-primary" style={{width: '100%'}} type="submit">
+                    {t(ui, 'ADMIN_BTN_LOGIN')}
+                </button>
             </form>
-        </div>);
+        </div>
+    );
 
-    return (<div className="app-container">
+    // --- RENDER: DASHBOARD ---
+    return (
+        <div className="app-container">
             {!isConnected && <div className="connexion-error-banner">⚠️ {t(ui, 'CONNECTION_LOST')}</div>}
 
             <div style={{opacity: isConnected ? 1 : 0.5}}>
-                <AdminHeader state={state} ui={ui} onLogout={() => {
-                    localStorage.removeItem('admin_token');
-                    window.location.reload();
-                }}/>
+                <AdminHeader
+                    state={state}
+                    ui={ui}
+                    onLogout={() => {
+                        localStorage.removeItem('admin_token');
+                        window.location.reload();
+                    }}
+                />
 
                 <div className="admin-grid">
                     <ShowLibrary
@@ -139,7 +193,10 @@ const AdminView = () => {
                     />
 
                     <AccessControl
-                        state={state} allowJoins={allowJoins} accessConfig={accessConfig} ui={ui}
+                        state={state}
+                        allowJoins={allowJoins}
+                        accessConfig={accessConfig}
+                        ui={ui}
                         onToggleJoins={() => emitAdmin('admin_toggle_joins', {value: !allowJoins})}
                         onUpdateConfig={updateAccessConfig}
                         onAddCode={addWhitelistCode}
@@ -163,6 +220,7 @@ const AdminView = () => {
                     }}
                 />
 
+                {/* Playlist Navigation */}
                 <div className="card" style={{
                     transition: 'all 0.3s ease',
                     borderTop: `4px solid ${state?.isLive ? '#22c55e' : '#ef4444'}`,
@@ -183,21 +241,31 @@ const AdminView = () => {
                     </h3>
 
                     <div style={{display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px'}}>
-                        {state?.playlist?.map((act, i) => (<button
+                        {state?.playlist?.map((act, i) => (
+                            <button
                                 key={act.id}
                                 className={state.currentIndex === i ? "btn-primary" : ""}
                                 onClick={() => emitAdmin('admin_set_scene', {index: i})}
                             >
                                 {act.title}
-                            </button>))}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
-                <SceneControl currentScene={state?.currentScene} proposals={proposals} socket={socket} token={token}
-                              emitAdmin={emitAdmin} ui={ui} isLive={state?.isLive}/>
+                <SceneControl
+                    currentScene={state?.currentScene}
+                    proposals={proposals}
+                    socket={socket}
+                    token={token}
+                    emitAdmin={emitAdmin}
+                    ui={ui}
+                    isLive={state?.isLive}
+                />
             </div>
             <Footer version={state?.version} ui={ui}/>
-        </div>);
+        </div>
+    );
 };
 
 export default AdminView;

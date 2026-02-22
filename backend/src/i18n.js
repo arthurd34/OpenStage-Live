@@ -62,6 +62,8 @@ const translations = {
         BTN_REFRESH: "Actualiser",
         ADMIN_NO_CONTROLS_FOR_SCENE: "La scène actuelle ({{name}}) n'a pas de contrôles spécifiques.",
         ADMIN_NO_SELECTED_SCENE: "Aucune scène active.",
+        ADMIN_GENERATE_BULK: "Générer en masse",
+        ADMIN_WHITELIST_FULL: "Plein",
 
         // --- ADMIN SHOW MANAGEMENT ---
         ADMIN_SHOW_CONFIG_TITLE: "Configuration du Show",
@@ -84,6 +86,15 @@ const translations = {
         ADMIN_UPLOAD_ERROR: "Erreur lors de l'importation.",
         ADMIN_CONFIRM_DELETE: "Supprimer définitivement ce spectacle ?",
         ADMIN_NO_SHOW_LOADED: "Aucun spectacle chargé. Veuillez charger un spectacle.",
+
+        // --- PRINTING QRCODE ---
+        PRINT_QRCODE: "Qrcode",
+        BTN_PRINT: "Imprimer les qrcode",
+        ADMIN_PRINT_SCAN_TO_JOIN: "Scannez pour rejoindre",
+        ADMIN_PRINT_MANUAL_MODE: "Mode manuel :",
+        ADMIN_PRINT_STEP_1: "Allez sur",
+        ADMIN_PRINT_STEP_2: "Suivez les instructions pour rejoindre avec le code ci-dessus.",
+        ADMIN_PRINT_ADVICE: "Conseil : Désactivez les marges dans les options d'impression.",
 
         // --- FOOTER ---
         MAKE_BY: "Conçu et développé par",
@@ -136,7 +147,7 @@ const translations = {
 
         // --- OVERLAYS & ERRORS ---
         CONNECTION_LOST: "Connection lost",
-        RECONNECTING: "Reconnecting...",
+        REconnecting: "Reconnecting...",
         REFRESH_IN: "Automatic refresh in",
         REFRESH_NOW: "Refresh now",
         ERROR_NAME_TAKEN: "This name is already taken.",
@@ -171,6 +182,8 @@ const translations = {
         BTN_REFRESH: "Refresh",
         ADMIN_NO_CONTROLS_FOR_SCENE: "The current scene ({{name}}) has no specific controls.",
         ADMIN_NO_SELECTED_SCENE: "No active scene.",
+        ADMIN_GENERATE_BULK: "Generate in bulk",
+        ADMIN_WHITELIST_FULL: "Full",
 
         // --- ADMIN SHOW MANAGEMENT ---
         ADMIN_SHOW_CONFIG_TITLE: "Show Configuration",
@@ -193,6 +206,15 @@ const translations = {
         ADMIN_UPLOAD_ERROR: "Error during upload.",
         ADMIN_CONFIRM_DELETE: "Permanently delete this show?",
         ADMIN_NO_SHOW_LOADED: "No show loaded. Please load a show.",
+
+        // --- PRINTING QRCODE ---
+        PRINT_QRCODE: "Qrcode",
+        BTN_PRINT: "Print qrcode",
+        ADMIN_PRINT_SCAN_TO_JOIN: "Scan to join",
+        ADMIN_PRINT_MANUAL_MODE: "Manual mode:",
+        ADMIN_PRINT_STEP_1: "Go to",
+        ADMIN_PRINT_STEP_2: "Follow the instructions to join with the code above.",
+        ADMIN_PRINT_ADVICE: "Tip: Disable margins in print options.",
 
         // --- FOOTER ---
         MAKE_BY: "Designed and developed by",
