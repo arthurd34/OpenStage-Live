@@ -34,6 +34,8 @@ const translations = {
         ERROR_SESSION_EXPIRED: "Session expirée.",
         ERROR_JOINS_CLOSED: "Les inscriptions sont fermées.",
         ERROR_SHOW_NOT_STARTED: "Le spectacle n'est pas encore ouvert au public.",
+        ERROR_INVALID_CODE: "Code d'accès invalide.",
+        ERROR_CODE_ALREADY_USED: "Ce code a déjà été utilisé.",
         SHOW_NOT_STARTED: "Spectacle en attente...",
 
         // --- ADMIN PANEL ---
@@ -59,6 +61,7 @@ const translations = {
         ADMIN_PROPOSALS_LIVE: "Réponses Public",
         BTN_REFRESH: "Actualiser",
         ADMIN_NO_CONTROLS_FOR_SCENE: "La scène actuelle ({{name}}) n'a pas de contrôles spécifiques.",
+        ADMIN_NO_SELECTED_SCENE: "Aucune scène active.",
 
         // --- ADMIN SHOW MANAGEMENT ---
         ADMIN_SHOW_CONFIG_TITLE: "Configuration du Show",
@@ -68,6 +71,12 @@ const translations = {
         ADMIN_LIVE_ON: "Le spectacle est ouvert (Public autorisé)",
         ADMIN_LIVE_OFF: "Accès public fermé",
         ADMIN_ACCESS_CONTROL: "Contrôle d'Accès",
+        ADMIN_MODE_PUBLIC: "Public",
+        ADMIN_MODE_WHITELIST: "Whitelist",
+        ADMIN_PUBLIC_KEY_LABEL: "Code de session (Public) :",
+        ADMIN_WHITELIST_ADD_PH: "Nouveau code...",
+        ADMIN_WHITELIST_NO_CODES: "Aucun code dans la liste.",
+        ADMIN_WHITELIST_USED_BY: "Utilisé par",
         ADMIN_BTN_LOAD: "Charger",
         ADMIN_BTN_UPLOAD_ZIP: "Importer un pack (.zip)",
         ADMIN_UPLOADING: "Envoi en cours...",
@@ -134,6 +143,8 @@ const translations = {
         ERROR_SESSION_EXPIRED: "Session expired.",
         ERROR_JOINS_CLOSED: "Registrations are closed.",
         ERROR_SHOW_NOT_STARTED: "The show is not open to the public yet.",
+        ERROR_INVALID_CODE: "Invalid access code.",
+        ERROR_CODE_ALREADY_USED: "This code has already been used.",
         SHOW_NOT_STARTED: "Show starting soon...",
 
         // --- ADMIN PANEL ---
@@ -159,6 +170,7 @@ const translations = {
         ADMIN_PROPOSALS_LIVE: "Public Responses",
         BTN_REFRESH: "Refresh",
         ADMIN_NO_CONTROLS_FOR_SCENE: "The current scene ({{name}}) has no specific controls.",
+        ADMIN_NO_SELECTED_SCENE: "No active scene.",
 
         // --- ADMIN SHOW MANAGEMENT ---
         ADMIN_SHOW_CONFIG_TITLE: "Show Configuration",
@@ -168,6 +180,12 @@ const translations = {
         ADMIN_LIVE_ON: "Show is live (Public allowed)",
         ADMIN_LIVE_OFF: "Public access closed",
         ADMIN_ACCESS_CONTROL: "Access Control",
+        ADMIN_MODE_PUBLIC: "Public",
+        ADMIN_MODE_WHITELIST: "Whitelist",
+        ADMIN_PUBLIC_KEY_LABEL: "Session code (Public):",
+        ADMIN_WHITELIST_ADD_PH: "New code...",
+        ADMIN_WHITELIST_NO_CODES: "No codes in the list.",
+        ADMIN_WHITELIST_USED_BY: "Used by",
         ADMIN_BTN_LOAD: "Load",
         ADMIN_BTN_UPLOAD_ZIP: "Import pack (.zip)",
         ADMIN_UPLOADING: "Uploading...",

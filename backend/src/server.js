@@ -40,10 +40,20 @@ let state = savedState || {
     pendingRequests: [],
     allProposals: [],
     adminTokens: [],
-    allowNewJoins: true
+    allowNewJoins: true,
+    // New access configuration
+    accessConfig: {
+        mode: 'PUBLIC', // 'PUBLIC' or 'WHITELIST'
+        publicCode: '1234',
+        whitelist: [] // { code: 'ABC', used: false, playerName: '' }
+    }
 };
 
 if (!state.adminTokens) state.adminTokens = [];
+// Ensure structure exists for older saved states
+if (!state.accessConfig) {
+    state.accessConfig = { mode: 'PUBLIC', publicCode: '1234', whitelist: [] };
+}
 
 let showConfig = {
     name: "No show loaded",
@@ -81,12 +91,16 @@ const getSyncData = () => {
         isLive: state.isLive,
         activeShowId: state.activeShowId,
         version: VERSION, // <--- Sent to all clients (Public & Admin)
-        ui: translations[showConfig.lang] || translations['fr']
+        ui: translations[showConfig.lang] || translations['fr'],
+        // Public only needs to know the mode and the allow status
+        allowNewJoins: state.allowNewJoins,
+        accessMode: state.accessConfig.mode
     };
 
     if (!state.isLive) {
         return {
             ...baseData,
+            accessConfig: state.accessConfig, // Admins need this even if not live
             currentScene: { id: 'OFFLINE', type: 'WAITING', params: { titleDisplay: "SHOW_NOT_STARTED" } }
         };
     }
@@ -95,7 +109,8 @@ const getSyncData = () => {
         ...baseData,
         currentScene: showConfig.scenes[state.currentSceneIndex],
         currentIndex: state.currentSceneIndex,
-        playlist: showConfig.scenes
+        playlist: showConfig.scenes,
+        accessConfig: state.accessConfig // Full config for admin sync
     };
 };
 
@@ -104,6 +119,8 @@ const isValidAdmin = (token) => state.adminTokens && state.adminTokens.includes(
 const refreshAdminLists = () => {
     io.to('admin_room').emit('admin_user_list', state.activeUsers);
     io.to('admin_room').emit('admin_pending_list', state.pendingRequests);
+    // Sync full state to admin to refresh access control UI
+    io.to('admin_room').emit('sync_state', getSyncData());
 };
 
 const getContext = () => ({
@@ -114,7 +131,8 @@ const getContext = () => ({
     getSyncData,
     setAllProposals: (val) => { state.allProposals = val; persist(); },
     setActiveUsers: (val) => { state.activeUsers = val; persist(); },
-    setPendingRequests: (val) => { state.pendingRequests = val; persist(); }
+    setPendingRequests: (val) => { state.pendingRequests = val; persist(); },
+    setAccessConfig: (val) => { state.accessConfig = val; persist(); }
 });
 
 const adminAction = (callback) => (data) => {
@@ -189,6 +207,11 @@ io.on('connection', (socket) => {
         socket.emit('login_error', 'ERROR_INVALID_CREDENTIALS');
     });
 
+    // ACCESS CONTROL CONFIGURATION
+    socket.on('admin_update_access_config', adminAction((data) => {
+        adminManager.updateAccessConfig(socket, io, data, getContext());
+    }));
+
     socket.on('admin_get_shows', adminAction(async () => {
         const shows = await ShowManager.listShows();
         socket.emit('admin_shows_list', shows);
@@ -219,6 +242,7 @@ io.on('connection', (socket) => {
         state.allowNewJoins = data.value;
         persist();
         io.to('admin_room').emit('admin_joins_status', state.allowNewJoins);
+        refreshAdminLists(); // Ensure admin UI reflects the change
     }));
 
     socket.on('admin_approve_user', adminAction((data) => adminManager.approveUser(socket, io, data, getContext())));
@@ -260,24 +284,64 @@ io.on('connection', (socket) => {
             return socket.emit('status_update', { status: 'rejected', reason: "ERROR_JOINS_CLOSED" });
         }
 
+        // --- ACCESS CODE VALIDATION ---
+        const entryCode = data.entryCode ? data.entryCode.trim().toUpperCase() : "";
+
+        if (state.accessConfig.mode === 'PUBLIC') {
+            if (entryCode !== state.accessConfig.publicCode.toUpperCase()) {
+                return socket.emit('status_update', { status: 'rejected', reason: "ERROR_INVALID_CODE" });
+            }
+        } else if (state.accessConfig.mode === 'WHITELIST') {
+            const codeObj = state.accessConfig.whitelist.find(c => c.code === entryCode);
+            if (!codeObj) {
+                return socket.emit('status_update', { status: 'rejected', reason: "ERROR_INVALID_CODE" });
+            }
+            if (codeObj.used) {
+                return socket.emit('status_update', { status: 'rejected', reason: "ERROR_CODE_ALREADY_USED" });
+            }
+            // Temporarily mark as used to prevent race conditions during name check
+            codeObj.used = true;
+            codeObj.playerName = data.name ? data.name.trim() : "Unknown";
+        }
+
         const nameLower = data.name ? data.name.trim().toLowerCase() : "";
-        if (!nameLower) return;
+        if (!nameLower) {
+            // Rollback whitelist if name is missing
+            if (state.accessConfig.mode === 'WHITELIST') {
+                const codeObj = state.accessConfig.whitelist.find(c => c.code === entryCode);
+                if (codeObj) { codeObj.used = false; codeObj.playerName = ""; }
+            }
+            return;
+        }
 
         const isNameTaken = state.activeUsers.some(u => u.name.toLowerCase() === nameLower) ||
             state.pendingRequests.some(r => r.name.toLowerCase() === nameLower);
 
         if (isNameTaken) {
+            // Rollback whitelist if name is taken
+            if (state.accessConfig.mode === 'WHITELIST') {
+                const codeObj = state.accessConfig.whitelist.find(c => c.code === entryCode);
+                if (codeObj) { codeObj.used = false; codeObj.playerName = ""; }
+            }
             return socket.emit('status_update', { status: 'rejected', reason: "ERROR_NAME_TAKEN" });
         }
 
         const userToken = crypto.randomBytes(16).toString('hex');
-        const req = { socketId: socket.id, name: data.name.trim(), token: userToken, connected: true, proposals: [] };
+        const req = {
+            socketId: socket.id,
+            name: data.name.trim(),
+            token: userToken,
+            connected: true,
+            proposals: [],
+            entryCode: entryCode // Track which code was used
+        };
 
         state.pendingRequests.push(req);
         persist();
 
         socket.emit('status_update', { status: 'pending', token: userToken });
         io.to('admin_room').emit('admin_new_request', req);
+        refreshAdminLists(); // Refresh to show whitelist code as "used" in Admin
     });
 
     socket.on('disconnect', () => {

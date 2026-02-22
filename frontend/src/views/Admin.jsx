@@ -29,8 +29,12 @@ const AdminView = () => {
     const [availableShows, setAvailableShows] = useState([]);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef(null);
+    const newCodeInputRef = useRef(null);
 
     const ui = state?.ui || {};
+
+    // Derived configuration from global state
+    const accessConfig = state?.accessConfig || { mode: 'PUBLIC', publicCode: '', whitelist: [] };
 
     // --- SECURE EMIT HELPER ---
     const emitAdmin = useCallback((event, data = {}) => {
@@ -61,6 +65,7 @@ const AdminView = () => {
         socket.on('sync_state', (s) => {
             setState(s);
             if (s.isLive !== undefined) setIsLive(s.isLive);
+            if (s.allowNewJoins !== undefined) setAllowJoins(s.allowNewJoins);
         });
 
         socket.on('admin_shows_list', (list) => setAvailableShows(list));
@@ -114,6 +119,26 @@ const AdminView = () => {
         const promptMsg = isRefusal ? 'ADMIN_PROMPT_REFUSE_REASON' : 'ADMIN_PROMPT_KICK_REASON';
         const reason = prompt(t(ui, promptMsg));
         if (reason !== null) emitAdmin('admin_kick_user', { socketId: id, reason, isRefusal });
+    };
+
+    // --- ACCESS CONTROL HANDLERS ---
+    const updateAccessConfig = (newConfig) => {
+        emitAdmin('admin_update_access_config', { accessConfig: { ...accessConfig, ...newConfig } });
+    };
+
+    const addWhitelistCode = () => {
+        const code = newCodeInputRef.current.value.trim().toUpperCase();
+        if (!code) return;
+        if (accessConfig.whitelist.find(c => c.code === code)) return alert("Code already exists");
+
+        const newList = [...accessConfig.whitelist, { code, used: false, playerName: '' }];
+        updateAccessConfig({ whitelist: newList });
+        newCodeInputRef.current.value = "";
+    };
+
+    const removeWhitelistCode = (code) => {
+        const newList = accessConfig.whitelist.filter(c => c.code !== code);
+        updateAccessConfig({ whitelist: newList });
     };
 
     // --- ZIP UPLOAD HANDLER ---
@@ -236,7 +261,6 @@ const AdminView = () => {
                                                 {showId} {isActive && "✓"}
                                             </span>
                                             <div style={{ display: 'flex', gap: '5px' }}>
-                                                {/* Only show Load button if NOT active */}
                                                 {!isActive && (
                                                     <button onClick={() => emitAdmin('admin_load_show', { showId })}>
                                                         {t(ui, 'ADMIN_BTN_LOAD')}
@@ -277,7 +301,9 @@ const AdminView = () => {
                     {/* ACCESS CONTROL */}
                     <section className="card">
                         <h3>{t(ui, 'ADMIN_ACCESS_CONTROL')}</h3>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+
+                        {/* Registration Toggle */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                 <label className="switch">
                                     <input type="checkbox" checked={allowJoins} onChange={() => emitAdmin('admin_toggle_joins', { value: !allowJoins })} />
@@ -286,6 +312,64 @@ const AdminView = () => {
                                 <h4 style={{ margin: 0 }}>{allowJoins ? t(ui, 'ADMIN_JOINS_OPEN') : t(ui, 'ADMIN_JOINS_CLOSED')}</h4>
                             </div>
                         </div>
+
+                        {/* Access Mode Selectors */}
+                        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                            <button
+                                className={accessConfig.mode === 'PUBLIC' ? 'btn-primary' : ''}
+                                style={{ flex: 1, cursor: 'pointer' }}
+                                onClick={() => updateAccessConfig({ mode: 'PUBLIC' })}
+                            >
+                                {t(ui, 'ADMIN_MODE_PUBLIC')}
+                            </button>
+                            <button
+                                className={accessConfig.mode === 'WHITELIST' ? 'btn-primary' : ''}
+                                style={{ flex: 1, cursor: 'pointer' }}
+                                onClick={() => updateAccessConfig({ mode: 'WHITELIST' })}
+                            >
+                                {t(ui, 'ADMIN_MODE_WHITELIST')}
+                            </button>
+                        </div>
+
+                        {/* Contextual Access Inputs */}
+                        {accessConfig.mode === 'PUBLIC' ? (
+                            <div className="config-group">
+                                <label style={{ fontSize: '0.8rem', opacity: 0.7 }}>{t(ui, 'ADMIN_PUBLIC_KEY_LABEL')}</label>
+                                <input
+                                    className="admin-input"
+                                    type="text"
+                                    maxLength="4"
+                                    placeholder="e.g. AZER"
+                                    style={{ textTransform: 'uppercase', textAlign: 'center', fontSize: '1.2rem', letterSpacing: '4px' }}
+                                    value={accessConfig.publicCode}
+                                    onChange={(e) => updateAccessConfig({ publicCode: e.target.value.toUpperCase() })}
+                                />
+                            </div>
+                        ) : (
+                            <div className="config-group">
+                                <div style={{ display: 'flex', gap: '5px', marginBottom: '15px' }}>
+                                    <input
+                                        ref={newCodeInputRef}
+                                        className="admin-input"
+                                        type="text"
+                                        placeholder={t(ui, 'ADMIN_WHITELIST_ADD_PH')}
+                                        onKeyDown={(e) => e.key === 'Enter' && addWhitelistCode()}
+                                    />
+                                    <button onClick={addWhitelistCode}>Add</button>
+                                </div>
+                                <div style={{ maxHeight: '150px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
+                                    {accessConfig.whitelist.length === 0 && <p style={{ padding: '10px', fontSize: '0.8rem', opacity: 0.5 }}>{t(ui, 'ADMIN_WHITELIST_NO_CODES')}</p>}
+                                    {accessConfig.whitelist.map(c => (
+                                        <div key={c.code} className="user-row" style={{ padding: '5px 10px', fontSize: '0.9rem' }}>
+                                            <span style={{ color: c.used ? '#22c55e' : 'inherit' }}>
+                                                {c.code} {c.used && <small>({t(ui, 'ADMIN_WHITELIST_USED_BY')} {c.playerName})</small>}
+                                            </span>
+                                            <button className="btn-danger" style={{ padding: '2px 8px' }} onClick={() => removeWhitelistCode(c.code)}>×</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </section>
                 </div>
 

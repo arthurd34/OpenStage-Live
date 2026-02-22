@@ -1,6 +1,20 @@
 const sceneManager = require('./scenes');
 
 module.exports = {
+    // --- ACCESS CONTROL MANAGEMENT ---
+    updateAccessConfig: (socket, io, data, context) => {
+        const { accessConfig } = data;
+        const { setAccessConfig, refreshAdminLists } = context;
+
+        if (accessConfig) {
+            // Update global state and trigger persistence
+            setAccessConfig(accessConfig);
+
+            // Sync new config to all admins immediately
+            refreshAdminLists();
+        }
+    },
+
     approveUser: (socket, io, data, context) => {
         const { socketId, welcomeMessage } = data;
         const {
@@ -36,14 +50,25 @@ module.exports = {
         const {
             activeUsers,
             pendingRequests,
-            allProposals,
+            accessConfig,
             refreshAdminLists,
             setActiveUsers,
             setPendingRequests,
-            setAllProposals
+            setAccessConfig
         } = context;
 
         const user = activeUsers.find(u => u.socketId === socketId);
+
+        // If using Whitelist, we might want to release the code when kicking/refusing
+        if (accessConfig.mode === 'WHITELIST' && (user || pendingRequests.some(r => r.socketId === socketId))) {
+            const targetUser = user || pendingRequests.find(r => r.socketId === socketId);
+            const codeObj = accessConfig.whitelist.find(c => c.code === targetUser.entryCode);
+            if (codeObj) {
+                codeObj.used = false;
+                codeObj.playerName = "";
+                setAccessConfig(accessConfig);
+            }
+        }
 
         if (user) {
             // Scene cleanup (proposals, etc.) through sceneManager

@@ -22,8 +22,7 @@ const SceneControl = ({ currentScene, proposals, socket, token, emitAdmin, ui })
         default:
             return (
                 <div className="card" style={{ textAlign: 'center', opacity: 0.5 }}>
-                    {/* 100% Translated via i18n helper */}
-                    {t(ui, 'ADMIN_NO_CONTROLS_FOR_SCENE', { name: currentScene.title })}
+                    {t(ui, 'ADMIN_NO_CONTROLS_FOR_SCENE', { name: currentScene.title ?? currentScene.type })}
                 </div>
             );
     }
