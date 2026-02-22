@@ -37,6 +37,11 @@ const AdminView = () => {
         socket.emit(event, { ...data, token });
     }, [token]);
 
+
+    useEffect(() => {
+        console.log("URL IS :", import.meta.env.VITE_BACKEND_URL);
+    }, []);
+
     useEffect(() => {
         // --- AUTH LISTENERS ---
         socket.on('login_success', (data) => {
