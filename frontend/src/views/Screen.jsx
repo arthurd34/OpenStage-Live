@@ -13,11 +13,9 @@ const ScreenView = () => {
     useEffect(() => {
         socket.on('sync_state', (state) => setGameState(state));
 
-        // [comment] Listen for immediate display events (Presets or Approved Winners)
+        // [comment] Listen for display events - NO TIMER ANYMORE
         socket.on('show_on_screen', (proposal) => {
             setManualWinner(proposal);
-            // [comment] Auto-clear manual winner after 15 seconds
-            setTimeout(() => setManualWinner(null), 15000);
         });
 
         return () => {
@@ -25,6 +23,10 @@ const ScreenView = () => {
             socket.off('show_on_screen');
         };
     }, []);
+
+    useEffect(() => {
+        setManualWinner(null);
+    }, [gameState?.currentIndex]);
 
     // [comment] Reset manual winner if admin changes the scene
     useEffect(() => {

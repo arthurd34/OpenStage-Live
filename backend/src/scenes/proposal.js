@@ -63,16 +63,19 @@ module.exports = {
 
     // --- NEW: VIRTUAL PROPOSAL FOR PRESETS ---
     admin_set_proposal_winner: (socket, io, data, context) => {
-        const virtualWinner = {
-            id: 'preset-' + Date.now(),
-            userName: "ADMIN",
-            text: data.text,
-            timestamp: new Date().toLocaleTimeString('fr-FR', { hour12: false }),
-            isWinner: true,
-            isAdmin: true
-        };
-        // [comment] Emit directly to the screen (ScreenView listens for this via sync_state or specific event)
-        io.emit('show_on_screen', virtualWinner);
+        if (data.action === 'SHOW') {
+            const virtualWinner = {
+                id: 'preset-active',
+                userName: "",
+                text: data.text,
+                timestamp: new Date().toLocaleTimeString('fr-FR', { hour12: false }),
+                isWinner: true,
+                isAdmin: true
+            };
+            io.emit('show_on_screen', virtualWinner);
+        } else {
+            io.emit('show_on_screen', null);
+        }
     },
 
     // --- NEW: DELETE SINGLE PROPOSAL ---

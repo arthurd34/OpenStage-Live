@@ -3,6 +3,7 @@ import { t } from '../../utils/i18n';
 
 const ProposalAdmin = ({ ui, proposals, socket, token, currentScene }) => {
     const [customText, setCustomText] = useState('');
+    const [activePreset, setActivePreset] = useState(null);
     const presets = currentScene?.params?.presets || [];
 
     const handleClearAll = () => {
@@ -32,9 +33,15 @@ const ProposalAdmin = ({ ui, proposals, socket, token, currentScene }) => {
     };
 
     const handleSendPreset = (text) => {
-        // [comment] Confirmation dialog before pushing a preset to the main screen
+        if (activePreset === text) {
+            socket.emit('admin_set_proposal_winner', { token, text, action: 'HIDE' });
+            setActivePreset(null);
+            return;
+        }
+
         if (window.confirm(`Voulez-vous diffuser "${text}" à l'écran ?`)) {
-            socket.emit('admin_set_proposal_winner', { token, text });
+            socket.emit('admin_set_proposal_winner', { token, text, action: 'SHOW' });
+            setActivePreset(text);
         }
     };
 
@@ -63,25 +70,21 @@ const ProposalAdmin = ({ ui, proposals, socket, token, currentScene }) => {
 
             {/* --- PRESETS SECTION --- */}
             {presets.length > 0 && (
-                <div style={{
-                    marginBottom: '20px',
-                    padding: '15px',
-                    background: 'rgba(255,255,255,0.05)',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(255,255,255,0.1)'
-                }}>
-                    <small style={{ display: 'block', marginBottom: '10px', opacity: 0.5, fontWeight: 'bold', textTransform: 'uppercase' }}>
-                        Presets :
-                    </small>
+                <div style={{ marginBottom: '20px', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                    <small style={{ display: 'block', marginBottom: '10px', opacity: 0.5, fontWeight: 'bold' }}>PRESETS (CLIQUER POUR TOGGLE) :</small>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                         {presets.map((p, i) => (
                             <button
-                                key={`preset-${i}`}
+                                key={i}
                                 className="btn-secondary"
-                                style={{ fontSize: '0.8rem', padding: '6px 12px' }}
+                                style={{
+                                    fontSize: '0.8rem',
+                                    border: activePreset === p ? '2px solid #00d4ff' : '1px solid transparent',
+                                    backgroundColor: activePreset === p ? 'rgba(0, 212, 255, 0.2)' : ''
+                                }}
                                 onClick={() => handleSendPreset(p)}
                             >
-                                {p}
+                                {activePreset === p ? `📺 ${p}` : p}
                             </button>
                         ))}
                     </div>
