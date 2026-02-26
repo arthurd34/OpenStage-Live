@@ -328,11 +328,7 @@ io.on('connection', (socket) => {
     }));
 
     socket.on('admin_set_winner', adminAction((data) => {
-        const {id, value} = data;
-        state.allProposals = state.allProposals.map(p => ({
-            ...p,
-            isWinner: p.id === id ? value : p.isWinner
-        }));
+        sceneManager.handleEvent(socket, io, 'admin_approve_proposal', data, getContext());
         persist();
         io.to('admin_room').emit('admin_sync_proposals', state.allProposals);
         io.emit('sync_state', getSyncData());

@@ -31,34 +31,32 @@ module.exports = {
         socket.emit('user_history_update', updatedUserProposals);
     },
 
-    admin_approve_proposal: (socket, io, ans, context) => {
-        const { allProposals, activeUsers, setAllProposals, setActiveUsers } = context;
+    admin_approve_proposal: (socket, io, data, context) => {
+        // [comment] We extract what we need from the context
+        const { allProposals, setAllProposals, getSyncData } = context;
+        const { id, value } = data;
 
-        const updatedAll = allProposals.map(a =>
-            a.id === ans.id ? { ...a, isWinner: true } : a
-        );
+        // [comment] 1. Update the local state (Same logic as your server.js snippet)
+        const updatedProposals = allProposals.map(p => ({
+            ...p,
+            isWinner: p.id === id ? value : p.isWinner
+        }));
 
-        const updatedUsers = activeUsers.map(u => {
-            if (u.name === ans.userName) {
-                return {
-                    ...u,
-                    proposals: u.proposals.map(p => p.id === ans.id ? { ...p, isWinner: true } : p)
-                };
-            }
-            return u;
-        });
+        // [comment] 2. Save to DB and update context state
+        setAllProposals(updatedProposals);
 
-        setAllProposals(updatedAll);
-        setActiveUsers(updatedUsers);
-
-        const winner = updatedAll.find(a => a.id === ans.id);
-        io.emit('show_on_screen', winner || ans);
-        io.to('admin_room').emit('admin_sync_proposals', updatedAll);
-
-        const targetUser = updatedUsers.find(u => u.name === ans.userName);
-        if (targetUser) {
-            io.to(targetUser.socketId).emit('user_history_update', targetUser.proposals);
+        // [comment] 3. Find the proposal to emit to the big screen if it's being marked as winner
+        if (value === true) {
+            const winner = updatedProposals.find(p => p.id === id);
+            io.emit('show_on_screen', winner);
+        } else {
+            // [comment] If unmarked, tell the screen to hide it
+            io.emit('show_on_screen', null);
         }
+
+        // [comment] 4. Sync everyone
+        io.to('admin_room').emit('admin_sync_proposals', updatedProposals);
+        io.emit('sync_state', getSyncData());
     },
 
     // --- NEW: VIRTUAL PROPOSAL FOR PRESETS ---
