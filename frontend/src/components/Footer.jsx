@@ -8,7 +8,7 @@ const Footer = ({ version, ui }) => {
     return (
         <footer>
             <p style={{ margin: '5px 0' }}>
-                <strong>Open ImproLive</strong> {version && `v${version}`}
+                <strong>Open StageLive</strong> {version && `v${version}`}
                 <span style={{ margin: '0 8px', opacity: 0.3 }}>|</span>
                 <span style={{ fontSize: '0.7rem', letterSpacing: '1px' }}>CC BY-NC-SA 4.0 License</span>
             </p>
@@ -18,7 +18,7 @@ const Footer = ({ version, ui }) => {
             </p>
 
             <div style={{ marginTop: '10px', fontSize: '65%', fontStyle: 'italic' }}>
-                © {displayYear} Open ImproLive. {t(ui, 'FOOTER_ALL_RIGHTS')}.
+                © {displayYear} Open StageLive. {t(ui, 'FOOTER_ALL_RIGHTS')}.
             </div>
         </footer>
     );

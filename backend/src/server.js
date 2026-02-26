@@ -472,7 +472,7 @@ io.on('connection', (socket) => {
 server.listen(process.env.PORT || 3000, () => {
     console.log(`
 =============================================
-   OPEN IMPRO LIVE - Version ${VERSION}
+   OPEN STAGE LIVE - Version ${VERSION}
 =============================================
    Server Ready on port ${process.env.PORT || 3000}
    Mode: ${process.env.NODE_ENV || 'development'}

@@ -47,7 +47,7 @@ const ScreenView = () => {
                 <div style={{ textAlign: 'center', width: '100%', animation: 'fadeIn 1s ease' }}>
                     {gameState.currentScene?.type === 'WAITING' ? (
                         <h1 style={{ fontSize: '10rem', color: '#00d4ff', textShadow: '0 0 60px rgba(0,212,255,0.6)' }}>
-                            OPEN IMPRO LIVE
+                            OPEN STAGE LIVE
                         </h1>
                     ) : (
                         <div style={{ padding: '0 50px' }}>

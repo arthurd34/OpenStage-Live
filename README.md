@@ -1,11 +1,11 @@
-# OpenImpro Live (Beta V1)
+# OpenStage Live (Beta V1)
 
-OpenImpro Live is an open-source platform designed to bridge the gap between the audience and the stage during live improvisational performances. It enables real-time interaction, fully moderated by the production team.
+OpenStage Live is an open-source platform designed to bridge the gap between the audience and the stage during live stagevisational performances. It enables real-time interaction, fully moderated by the production team.
 
 ---
 
 ## Version Française
-OpenImpro Live est une plateforme open-source qui connecte le public aux spectacles d'improvisation théâtrale via des interactions en temps réel, entièrement modérées par la régie.
+OpenStage Live est une plateforme open-source qui connecte le public aux spectacles d'stagevisation théâtrale via des interactions en temps réel, entièrement modérées par la régie.
 
 ---
 

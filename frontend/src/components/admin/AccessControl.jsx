@@ -55,7 +55,7 @@ const AccessControl = ({ state, allowJoins, accessConfig, onToggleJoins, onUpdat
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Qrcode - Open Impro Live</title>
+                <title>Qrcode - Open Stage Live</title>
                 <style>
                     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
                     
@@ -121,7 +121,7 @@ const AccessControl = ({ state, allowJoins, accessConfig, onToggleJoins, onUpdat
                 <div class="page">
                     ${codesToPrint.map(item => `
                         <div class="ticket">
-                            <div class="header">Open Impro Live</div>
+                            <div class="header">Open Stage Live</div>
                             
                             <div class="qr-box">
                                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(clientUrl + '?code=' + item.code)}" />

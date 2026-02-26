@@ -7,8 +7,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - openimpro_data:/app/database
-      - openimpro_shows:/app/shows
+      - openstage_data:/app/database
+      - openstage_shows:/app/shows
 
   frontend:
     build:
@@ -21,5 +21,5 @@ services:
       - "8080:80"
 
 volumes:
-  openimpro_data:
-  openimpro_shows:
+  openstage_data:
+  openstage_shows:
