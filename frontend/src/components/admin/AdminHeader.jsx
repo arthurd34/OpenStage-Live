@@ -1,7 +1,12 @@
 import React from 'react';
 import { t } from '../../utils/i18n';
+import LatencyIndicator from '../LatencyIndicator';
 
-const AdminHeader = ({ state, ui, onLogout }) => (
+/**
+ * AdminHeader Component
+ * Displays the title, current show status, admin ping, and logout button
+ */
+const AdminHeader = ({ state, ui, onLogout, ping }) => (
     <header className="admin-header-container" style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -12,7 +17,12 @@ const AdminHeader = ({ state, ui, onLogout }) => (
         marginBottom: '20px'
     }}>
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <h1 style={{ margin: 0, lineHeight: 1.2 }}>{t(ui, 'ADMIN_DASHBOARD_TITLE')}</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <h1 style={{ margin: 0, lineHeight: 1.2 }}>{t(ui, 'ADMIN_DASHBOARD_TITLE')}</h1>
+                {/* Admin's own latency indicator */}
+                <LatencyIndicator ping={ping} />
+            </div>
+
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '5px' }}>
                 <span style={{
                     width: '8px',

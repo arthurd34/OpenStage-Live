@@ -1,5 +1,6 @@
 import React from 'react';
 import { t } from '../../utils/i18n';
+import LatencyIndicator from '../LatencyIndicator';
 
 const UserManagement = ({ requests, users, onApprove, onKick, onRename, ui }) => {
     return (
@@ -47,10 +48,13 @@ const UserManagement = ({ requests, users, onApprove, onKick, onRename, ui }) =>
                         users.map(u => (
                             <div key={u.socketId} className="user-row">
                                 <div className="user-info">
-                                    <span style={{
-                                        color: u.connected ? '#22c55e' : '#ef4444',
-                                        marginRight: '8px'
-                                    }}>●</span>
+                                    <div className="user-info" style={{ display: 'flex', alignItems: 'center' }}>
+                                        <span style={{ color: u.connected ? '#22c55e' : '#ef4444', marginRight: '8px' }}>●</span>
+                                        <div style={{ marginRight: '15px' }}>
+                                            <LatencyIndicator ping={u.ping || 0} />
+                                        </div>
+                                        <span style={{ fontWeight: u.connected ? 'bold' : 'normal' }}>{u.name}</span>
+                                    </div>
                                     <span style={{ fontWeight: u.connected ? 'bold' : 'normal', opacity: u.connected ? 1 : 0.6 }}>
                                         {u.name}
                                     </span>

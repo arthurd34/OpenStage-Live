@@ -9,6 +9,7 @@ import WaitingScene from '../components/scenes/WaitingScene';
 import Leaderboard from '../components/scenes/Leaderboard';
 import Footer from '../components/Footer';
 import ConnectionErrorOverlay from '../components/overlays/ConnectionErrorOverlay';
+import LatencyIndicator from '../components/LatencyIndicator';
 
 // Ensure the CSS provided below is in your stylesheet
 import './PublicView.css';
@@ -26,6 +27,7 @@ const PublicView = () => {
     const [history, setHistory] = useState([]);
     const [isConnected, setIsConnected] = useState(socket.connected);
     const [countdown, setCountdown] = useState(15);
+    const [ping, setPing] = useState(0);
 
     // --- ANIMATION STATES ---
     const [scoreDiff, setScoreDiff] = useState(null);
@@ -41,16 +43,39 @@ const PublicView = () => {
     const showPoints = gameState?.hasPoints || false;
     const isScoreVisible = gameState?.isScoreVisible || false;
 
+    // --- EFFECT: LATENCY MONITORING (PING) ---
+    useEffect(() => {
+        let pingStart;
+
+        // Probe server every 3 seconds to calculate Round Trip Time (RTT)
+        const interval = setInterval(() => {
+            if (socket.connected) {
+                pingStart = Date.now();
+                socket.emit('ping_probe');
+            }
+        }, 3000);
+
+        socket.on('pong_response', () => {
+            const ms = Date.now() - pingStart;
+            setPing(ms);
+            // Report ping to server so admin can monitor all devices
+            socket.emit('report_ping', { ping: ms });
+        });
+
+        return () => {
+            clearInterval(interval);
+            socket.off('pong_response');
+        };
+    }, []);
+
     // --- EFFECT: DETECT SCORE CHANGE & TRIGGER ANIMATION ---
     useEffect(() => {
         if (myScore !== prevScoreRef.current) {
             const diff = myScore - prevScoreRef.current;
 
-            // Trigger animation for any change (positive or negative)
             setScoreDiff(diff);
             setAnimateScore(true);
 
-            // Reset animation states after duration
             const timeout = setTimeout(() => {
                 setAnimateScore(false);
                 setScoreDiff(null);
@@ -121,7 +146,6 @@ const PublicView = () => {
                 localStorage.setItem('player_name', finalName);
                 if (data.name) setName(data.name);
                 setMessage('');
-                // Initialize score ref on approval
                 if (gameState?.scores?.[finalName]) {
                     prevScoreRef.current = gameState.scores[finalName];
                 }
@@ -230,8 +254,13 @@ const PublicView = () => {
                 )}
 
                 <div className={`card ${animateScore ? (scoreDiff > 0 ? 'score-pop-up' : 'score-pop-down') : ''}`}>
+                    {/* --- LATENCY INDICATOR (TOP LEFT OF CARD) --- */}
+                    <div style={{ position: 'absolute', top: '10px', left: '10px' }}>
+                        <LatencyIndicator ping={ping} />
+                    </div>
+
                     <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingLeft: '35px' }}>
                             <h3 style={{ margin: 0 }}>{name}</h3>
 
                             {/* --- SCORE BADGE --- */}

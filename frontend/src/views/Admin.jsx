@@ -31,6 +31,9 @@ const AdminView = () => {
     const [availableShows, setAvailableShows] = useState([]);
     const [isUploading, setIsUploading] = useState(false);
 
+    // --- MONITORING STATE ---
+    const [ping, setPing] = useState(0);
+
     const fileInputRef = useRef(null);
     const newCodeInputRef = useRef(null);
 
@@ -42,6 +45,27 @@ const AdminView = () => {
     const emitAdmin = useCallback((event, data = {}) => {
         socket.emit(event, { ...data, token });
     }, [token]);
+
+    // --- EFFECT: LATENCY MONITORING (PING) ---
+    useEffect(() => {
+        let pingStart;
+
+        const interval = setInterval(() => {
+            if (socket.connected && auth) {
+                pingStart = Date.now();
+                socket.emit('ping_probe');
+            }
+        }, 3000);
+
+        socket.on('pong_response', () => {
+            setPing(Date.now() - pingStart);
+        });
+
+        return () => {
+            clearInterval(interval);
+            socket.off('pong_response');
+        };
+    }, [auth]);
 
     useEffect(() => {
         // Handle successful login
@@ -186,6 +210,7 @@ const AdminView = () => {
                 <AdminHeader
                     state={state}
                     ui={ui}
+                    ping={ping}
                     onLogout={() => {
                         localStorage.removeItem('admin_token');
                         window.location.reload();
@@ -204,7 +229,6 @@ const AdminView = () => {
                         onUpload={handleFileUpload}
                         fileInputRef={fileInputRef}
                         emitAdmin={(event, data) => {
-                            // Intercept toggle live for confirmation
                             if (event === 'admin_toggle_live') {
                                 handleToggleLive(data.value);
                             } else {

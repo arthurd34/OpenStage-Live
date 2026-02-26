@@ -190,8 +190,29 @@ app.post('/admin/upload-show', async (req, res) => {
 io.on('connection', (socket) => {
     socket.emit('sync_state', getSyncData());
 
+    // Latency probe handler
+    socket.on('ping_probe', () => {
+        socket.emit('pong_response');
+    });
+
+    // Update user ping in state when received from client
+    socket.on('report_ping', (data) => {
+        const user = state.activeUsers.find(u => u.socketId === socket.id);
+        if (user) {
+            user.ping = data.ping;
+            // Optimization: only refresh admin lists every few seconds or on significant change
+            // but for now, we keep it simple:
+            refreshAdminLists();
+        }
+    });
+
     socket.on('admin_login', (data) => {
         const { password, token } = (typeof data === 'string') ? { password: data } : data;
+
+        // DEBUG LOGS (À supprimer après)
+        console.log("RECU:", password);
+        console.log("ATTENDU (ENV):", process.env.ADMIN_PASSWORD);
+        console.log("MATCH ?", password === process.env.ADMIN_PASSWORD);
 
         if (password && password === process.env.ADMIN_PASSWORD) {
             const newToken = crypto
