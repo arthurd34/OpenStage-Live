@@ -16,7 +16,7 @@ const translations = require("./i18n");
 const proposal = require('./scenes/proposal');
 
 // --- VERSION CONFIGURATION ---
-const VERSION = "1.0.0-beta";
+const VERSION = "1.0-beta.1";
 
 const app = express();
 const server = http.createServer(app);
@@ -68,7 +68,6 @@ let showConfig = {
 const persist = () => dbManager.saveState(state);
 
 // --- SHOW MANAGEMENT HELPERS ---
-
 const loadShowConfig = (showId) => {
     try {
         const configPath = path.join(__dirname, '..', 'shows', showId, 'config.json');

@@ -19,7 +19,7 @@ const ConnectionScene = ({
         return (
             <div className="card" style={{ textAlign: 'center', padding: '40px 20px' }}>
                 <h2>{t(ui, 'CONN_WELCOME_TITLE')}</h2>
-                <div style={{ fontSize: '4rem', margin: '20px 0' }}>🎭</div>
+                <div style={{ fontSize: '4rem', margin: '20px 0' }}>🎤</div>
                 <p style={{ lineHeight: '1.6', opacity: 0.9 }}>
                     {t(ui, 'CONN_NOT_STARTED_MSG')}
                 </p>
