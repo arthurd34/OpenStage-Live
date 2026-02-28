@@ -13,6 +13,7 @@ const sceneManager = require('./scenes');
 const adminManager = require('./admin');
 const ShowManager = require('./showManager');
 const translations = require("./i18n");
+const proposal = require('./scenes/proposal');
 
 // --- VERSION CONFIGURATION ---
 const VERSION = "1.0.0-beta";
@@ -335,10 +336,21 @@ io.on('connection', (socket) => {
     }));
 
     socket.on('admin_delete_proposal', adminAction((data) => {
-        state.allProposals = state.allProposals.filter(p => p.id !== data.id);
-        persist();
-        io.to('admin_room').emit('admin_sync_proposals', state.allProposals);
-        io.emit('sync_state', getSyncData());
+        const proposalToDelete = state.allProposals.find(p => p.id === data.id);
+
+        if (proposalToDelete) {
+            state.allProposals = state.allProposals.filter(p => p.id !== data.id);
+
+            const user = state.activeUsers.find(u => u.name === proposalToDelete.userName);
+            if (user) {
+                user.proposals = user.proposals.filter(p => p.id !== data.id);
+                io.to(user.socketId).emit('user_history_update', user.proposals);
+            }
+
+            persist();
+            io.to('admin_room').emit('admin_sync_proposals', state.allProposals);
+            io.emit('sync_state', getSyncData());
+        }
     }));
 
     // --- SHOWS & SYSTEM ---
@@ -397,8 +409,14 @@ io.on('connection', (socket) => {
 
     socket.on('admin_clear_all_proposals', adminAction((data) => {
         state.allProposals = [];
+        state.activeUsers.forEach(u => {
+            u.proposals = [];
+        });
+
         persist();
+
         io.to('admin_room').emit('admin_sync_proposals', state.allProposals);
+        io.emit('user_history_update', []);
         io.emit('sync_state', getSyncData());
     }));
 
