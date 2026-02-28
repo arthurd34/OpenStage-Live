@@ -290,67 +290,32 @@ io.on('connection', (socket) => {
     }));
 
     // --- PROPOSALS LOGIC ---
-
     socket.on('send_proposal', (data) => {
-        // Intercept Admin Manual Add
+        // If the proposal contains a valid admin token, we mark it as an admin proposal
         if (data && data.token && isValidAdmin(data.token)) {
-            const newProposal = {
-                id: crypto.randomBytes(8).toString('hex'),
-                userName: data.userName || "ADMIN",
-                text: data.text,
-                timestamp: new Date().toLocaleTimeString(),
-                isAdmin: true,
-                isWinner: false,
-                isDisplayed: false
-            };
-            state.allProposals.push(newProposal);
-            persist();
-            io.to('admin_room').emit('admin_sync_proposals', state.allProposals);
-            io.emit('sync_state', getSyncData());
-            return;
+            data.isAdmin = true;
         }
-        // Normal Player Proposal
-        sceneManager.handleEvent(socket, io, 'send_proposal', data, getContext());
+        proposal.send_proposal(socket, io, data, getContext());
     });
 
     socket.on('admin_set_proposal_winner', adminAction((data) => {
-        sceneManager.handleEvent(socket, io, 'admin_set_proposal_winner', data, getContext());
+        proposal.admin_set_proposal_winner(socket, io, data, getContext());
     }));
 
     socket.on('admin_display_proposal', adminAction((data) => {
-        const {id, value} = data;
-        state.allProposals = state.allProposals.map(p => ({
-            ...p,
-            isDisplayed: p.id === id ? value : p.isDisplayed
-        }));
-        persist();
-        io.to('admin_room').emit('admin_sync_proposals', state.allProposals);
-        io.emit('sync_state', getSyncData());
+        proposal.admin_display_proposal(socket, io, data, getContext());
     }));
 
     socket.on('admin_set_winner', adminAction((data) => {
-        sceneManager.handleEvent(socket, io, 'admin_approve_proposal', data, getContext());
-        persist();
-        io.to('admin_room').emit('admin_sync_proposals', state.allProposals);
-        io.emit('sync_state', getSyncData());
+        proposal.admin_approve_proposal(socket, io, data, getContext());
     }));
 
     socket.on('admin_delete_proposal', adminAction((data) => {
-        const proposalToDelete = state.allProposals.find(p => p.id === data.id);
+        proposal.admin_delete_proposal(socket, io, data, getContext());
+    }));
 
-        if (proposalToDelete) {
-            state.allProposals = state.allProposals.filter(p => p.id !== data.id);
-
-            const user = state.activeUsers.find(u => u.name === proposalToDelete.userName);
-            if (user) {
-                user.proposals = user.proposals.filter(p => p.id !== data.id);
-                io.to(user.socketId).emit('user_history_update', user.proposals);
-            }
-
-            persist();
-            io.to('admin_room').emit('admin_sync_proposals', state.allProposals);
-            io.emit('sync_state', getSyncData());
-        }
+    socket.on('admin_clear_all_proposals', adminAction((data) => {
+        proposal.admin_clear_all_proposals(socket, io, data, getContext());
     }));
 
     // --- SHOWS & SYSTEM ---

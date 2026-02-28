@@ -1,6 +1,28 @@
 module.exports = {
     send_proposal: (socket, io, data, context) => {
-        const { activeUsers, allProposals, currentScene, setAllProposals, setActiveUsers } = context;
+        const { activeUsers, allProposals, currentScene, setAllProposals, setActiveUsers, getSyncData } = context;
+
+        // --- 1. CAS : AJOUT MANUEL PAR L'ADMIN ---
+        if (data.isAdmin) {
+            const newProposal = {
+                id: Date.now().toString(), // Identifiant unique
+                userName: data.userName || "ADMIN",
+                text: data.text,
+                timestamp: new Date().toLocaleTimeString('fr-FR', { hour12: false }),
+                isAdmin: true,
+                isWinner: false,
+                isDisplayed: false
+            };
+
+            const updatedAll = [newProposal, ...allProposals];
+            setAllProposals(updatedAll);
+
+            io.to('admin_room').emit('admin_sync_proposals', updatedAll);
+            io.emit('sync_state', getSyncData());
+            return;
+        }
+
+        // --- 2. CAS : PROPOSITION NORMIALE D'UN JOUEUR ---
         const user = activeUsers.find(u => u.name === data.userName);
         const maxAllowed = currentScene?.params?.maxProposals || 3;
 
@@ -10,15 +32,16 @@ module.exports = {
         }
 
         const newProposal = {
-            id: Date.now(),
+            id: Date.now().toString(),
             userName: data.userName,
             text: data.text,
             timestamp: new Date().toLocaleTimeString('fr-FR', { hour12: false }),
-            isWinner: false
+            isWinner: false,
+            isDisplayed: false
         };
 
         const updatedUserProposals = [...user.proposals, newProposal];
-        const updatedAllProposals = [newProposal, ...allProposals]; // Newest first for admin
+        const updatedAllProposals = [newProposal, ...allProposals]; // Récent en premier pour l'admin
 
         const updatedUsers = activeUsers.map(u =>
             u.name === data.userName ? { ...u, proposals: updatedUserProposals } : u
@@ -32,34 +55,43 @@ module.exports = {
     },
 
     admin_approve_proposal: (socket, io, data, context) => {
-        // [comment] We extract what we need from the context
         const { allProposals, setAllProposals, getSyncData } = context;
         const { id, value } = data;
 
-        // [comment] 1. Update the local state (Same logic as your server.js snippet)
         const updatedProposals = allProposals.map(p => ({
             ...p,
             isWinner: p.id === id ? value : p.isWinner
         }));
 
-        // [comment] 2. Save to DB and update context state
         setAllProposals(updatedProposals);
 
-        // [comment] 3. Find the proposal to emit to the big screen if it's being marked as winner
+        // Si on le marque comme gagnant, on le projette. Sinon on cache l'écran.
         if (value === true) {
             const winner = updatedProposals.find(p => p.id === id);
             io.emit('show_on_screen', winner);
+            io.to('admin_room').emit('admin_preset_active', null); // On désactive les presets
         } else {
-            // [comment] If unmarked, tell the screen to hide it
             io.emit('show_on_screen', null);
         }
 
-        // [comment] 4. Sync everyone
         io.to('admin_room').emit('admin_sync_proposals', updatedProposals);
         io.emit('sync_state', getSyncData());
     },
 
-    // --- NEW: VIRTUAL PROPOSAL FOR PRESETS ---
+    admin_display_proposal: (socket, io, data, context) => {
+        const { allProposals, setAllProposals, getSyncData } = context;
+        const { id, value } = data;
+
+        const updatedProposals = allProposals.map(p => ({
+            ...p,
+            isDisplayed: p.id === id ? value : p.isDisplayed
+        }));
+
+        setAllProposals(updatedProposals);
+        io.to('admin_room').emit('admin_sync_proposals', updatedProposals);
+        io.emit('sync_state', getSyncData());
+    },
+
     admin_set_proposal_winner: (socket, io, data, context) => {
         if (data.action === 'SHOW') {
             const virtualWinner = {
@@ -78,21 +110,27 @@ module.exports = {
         }
     },
 
-    // --- NEW: DELETE SINGLE PROPOSAL ---
-    admin_delete_proposal: (socket, io, proposalId, context) => {
-        const { allProposals, setAllProposals, activeUsers, setActiveUsers } = context
-        // Find the proposal to delete and its author
-        const proposalToDelete = allProposals.find(p => p.id === proposalId);
+    admin_delete_proposal: (socket, io, data, context) => {
+        const { allProposals, setAllProposals, activeUsers, setActiveUsers, getSyncData } = context;
+        const targetId = data.id || data; // Sécurité si c'est un objet ou une string brute
+
+        const proposalToDelete = allProposals.find(p => p.id === targetId);
         if (!proposalToDelete) return;
 
-        const updatedAll = allProposals.filter(p => p.id !== proposalId);
+        // Si la proposition était affichée sur l'écran géant, on nettoie l'écran
+        if (proposalToDelete.isWinner) {
+            io.emit('show_on_screen', null);
+        }
 
-        // update the user's proposal list and notify them
+        const updatedAll = allProposals.filter(p => p.id !== targetId);
+
         const updatedUsers = activeUsers.map(u => {
             if (u.name === proposalToDelete.userName) {
-                const newHistory = u.proposals.filter(p => p.id !== proposalId);
-                // Notify the user about the updated history after deletion
-                io.to(u.socketId).emit('user_history_update', newHistory);
+                const newHistory = u.proposals.filter(p => p.id !== targetId);
+                // On met à jour le téléphone du joueur IMMÉDIATEMENT
+                if (u.socketId) {
+                    io.to(u.socketId).emit('user_history_update', newHistory);
+                }
                 return { ...u, proposals: newHistory };
             }
             return u;
@@ -102,19 +140,23 @@ module.exports = {
         setActiveUsers(updatedUsers);
 
         io.to('admin_room').emit('admin_sync_proposals', updatedAll);
+        io.emit('sync_state', getSyncData());
     },
 
-    // --- NEW: CLEAR EVERYTHING ---
     admin_clear_all_proposals: (socket, io, data, context) => {
-        const { setActiveUsers, setAllProposals, activeUsers } = context;
+        const { setActiveUsers, setAllProposals, activeUsers, getSyncData } = context;
 
+        // Vide l'historique de chaque utilisateur
         const clearedUsers = activeUsers.map(u => ({ ...u, proposals: [] }));
 
         setActiveUsers(clearedUsers);
         setAllProposals([]);
 
+        io.emit('show_on_screen', null); // Cache l'écran géant
+
         io.to('admin_room').emit('admin_sync_proposals', []);
-        io.emit('user_history_update', []); // Clear all clients' history
+        io.emit('user_history_update', []); // Vide tous les téléphones
+        io.emit('sync_state', getSyncData());
     },
 
     cleanupUser: (io, user, context) => {
