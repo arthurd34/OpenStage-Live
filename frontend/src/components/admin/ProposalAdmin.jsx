@@ -36,7 +36,7 @@ const ProposalAdmin = ({ ui, proposals, socket, token, currentScene }) => {
     };
 
     const handleToggleWinner = (proposal) => {
-        socket.emit('admin_set_winner', {
+        socket.emit('admin_approve_proposal', {
             token,
             id: proposal.id,
             value: !proposal.isWinner

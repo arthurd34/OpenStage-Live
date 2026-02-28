@@ -221,12 +221,6 @@ io.on('connection', (socket) => {
 
     socket.on('admin_login', (data) => {
         const {password, token} = (typeof data === 'string') ? {password: data} : data;
-
-        // DEBUG LOGS (À supprimer après)
-        console.log("RECU:", password);
-        console.log("ATTENDU (ENV):", process.env.ADMIN_PASSWORD);
-        console.log("MATCH ?", password === process.env.ADMIN_PASSWORD);
-
         if (password && password === process.env.ADMIN_PASSWORD) {
             const newToken = crypto
                 .createHmac('sha256', process.env.SECRET_TOKEN)
@@ -306,7 +300,7 @@ io.on('connection', (socket) => {
         proposal.admin_display_proposal(socket, io, data, getContext());
     }));
 
-    socket.on('admin_set_winner', adminAction((data) => {
+    socket.on('admin_approve_proposal', adminAction((data) => {
         proposal.admin_approve_proposal(socket, io, data, getContext());
     }));
 
@@ -319,7 +313,6 @@ io.on('connection', (socket) => {
     }));
 
     // --- SHOWS & SYSTEM ---
-
     socket.on('admin_get_shows', adminAction(async () => {
         const shows = await ShowManager.listShows();
         socket.emit('admin_shows_list', shows);
