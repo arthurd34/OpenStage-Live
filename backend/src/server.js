@@ -343,6 +343,10 @@ io.on('connection', (socket) => {
             state.activeUsers = [];
             state.pendingRequests = [];
             state.scores = {};
+            state.accessConfig.whitelist.forEach(c => {
+                c.used = false;
+                c.playerName = '';
+            });
             io.emit('status_update', {
                 status: 'session_expired',
                 reason: "Le spectacle est terminé. Merci de votre participation !"
