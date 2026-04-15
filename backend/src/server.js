@@ -341,8 +341,13 @@ io.on('connection', (socket) => {
         state.activeShowId = data.showId;
         state.currentSceneIndex = 0;
         state.isLive = false;
+        state.allProposals = [];
+        state.activePreset = null;
+        state.activeUsers.forEach(u => { u.proposals = []; });
         persist();
         io.emit('sync_state', getSyncData());
+        io.to('admin_room').emit('admin_sync_proposals', []);
+        io.emit('user_history_update', []);
     }));
 
     socket.on('admin_toggle_live', adminAction((data) => {

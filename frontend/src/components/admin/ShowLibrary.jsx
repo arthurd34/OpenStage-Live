@@ -34,7 +34,16 @@ const ShowLibrary = ({
                                     {showId} {isActive && "✓"}
                                 </span>
                                 <div style={{ display: 'flex', gap: '5px' }}>
-                                    {!isActive && <button onClick={() => onLoad(showId)}>{t(ui, 'ADMIN_BTN_LOAD')}</button>}
+                                    {!isActive && (
+                                        <button onClick={() => {
+                                            const msg = isLive
+                                                ? `⚠️ Le spectacle est en cours !\nCharger "${showId}" expulsera tous les joueurs connectés.\n\nContinuer ?`
+                                                : `Charger le spectacle "${showId}" ?\nCela remplacera le spectacle actuel.`;
+                                            if (window.confirm(msg)) onLoad(showId);
+                                        }}>
+                                            {t(ui, 'ADMIN_BTN_LOAD')}
+                                        </button>
+                                    )}
                                     <button className="btn-danger" onClick={() => onDelete(showId)}>🗑</button>
                                 </div>
                             </div>
