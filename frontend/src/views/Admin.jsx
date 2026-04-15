@@ -15,6 +15,8 @@ const socketUrl = import.meta.env.VITE_BACKEND_URL;
 const socket = io(socketUrl, { transports: ["websocket"] });
 
 const AdminView = () => {
+    useEffect(() => { document.title = 'Backoffice - Open Impro Live'; }, []);
+
     // --- AUTH & SESSION STATE ---
     const [auth, setAuth] = useState(false);
     const [pass, setPass] = useState('');

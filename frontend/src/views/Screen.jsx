@@ -13,6 +13,8 @@ const ScreenView = () => {
     const [gameState, setGameState] = useState(null);
     const [manualWinner, setManualWinner] = useState(null);
 
+    useEffect(() => { document.title = 'Screen - Open Impro Live'; }, []);
+
     // --- SYSTEM HOOKS ---
     useAssetPreloader(gameState);
     useCustomTheme(gameState);

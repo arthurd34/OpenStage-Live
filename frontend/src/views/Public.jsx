@@ -42,6 +42,10 @@ const PublicView = () => {
     const nameRef = useRef('');
     const ui = gameState?.ui || {};
 
+    useEffect(() => {
+        document.title = gameState?.showName || 'Open Impro Live';
+    }, [gameState?.showName]);
+
     // --- DERIVED STATE: SCORE & VISIBILITY ---
     const myScore = gameState?.scores?.[name] || 0;
     const showPoints = gameState?.hasPoints || false;
