@@ -16,7 +16,7 @@ const translations = require("./i18n");
 const proposal = require('./scenes/proposal');
 
 // --- VERSION CONFIGURATION ---
-const VERSION = "1.0-beta.1";
+const VERSION = "1.0-beta.2";
 
 const app = express();
 const server = http.createServer(app);
