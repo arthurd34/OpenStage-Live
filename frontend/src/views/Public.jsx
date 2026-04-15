@@ -256,7 +256,7 @@ const PublicView = () => {
 
             <div className="main-content">
                 {/* --- LEADERBOARD OVERLAY --- */}
-                {showPoints && isScoreVisible && (
+                {showPoints && isScoreVisible && sceneType !== 'LEADERBOARD' && (
                     <Leaderboard scores={gameState.scores} ui={ui} />
                 )}
 
@@ -321,8 +321,9 @@ const PublicView = () => {
                     {/* --- SCENE CONTENT --- */}
                     {(() => {
                         switch (sceneType) {
-                            case 'PROPOSAL': return <ProposalScene {...sceneProps} />;
-                            case 'WAITING':  return <WaitingScene {...sceneProps} />;
+                            case 'PROPOSAL':    return <ProposalScene {...sceneProps} />;
+                            case 'WAITING':     return <WaitingScene {...sceneProps} />;
+                            case 'LEADERBOARD': return <Leaderboard scores={gameState.scores} ui={ui} />;
                             default: return (
                                 <div style={{textAlign:'center', padding:'40px 20px', opacity: 0.5}}>
                                     <div className="spinner" style={{ margin: '0 auto 15px' }}></div>
