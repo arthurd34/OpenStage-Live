@@ -34,7 +34,14 @@ const ShowLibrary = ({
                                     {showId} {isActive && "✓"}
                                 </span>
                                 <div style={{ display: 'flex', gap: '5px' }}>
-                                    {!isActive && (
+                                    {isActive ? (
+                                        <button
+                                            title="Recharger le config.json depuis le disque"
+                                            onClick={() => emitAdmin('admin_reload_show')}
+                                        >
+                                            🔄 Recharger
+                                        </button>
+                                    ) : (
                                         <button onClick={() => {
                                             const msg = isLive
                                                 ? `⚠️ Le spectacle est en cours !\nCharger "${showId}" expulsera tous les joueurs connectés.\n\nContinuer ?`

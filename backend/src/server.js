@@ -315,6 +315,12 @@ io.on('connection', (socket) => {
         socket.emit('admin_shows_list', await ShowManager.listShows());
     }));
 
+    socket.on('admin_reload_show', adminAction(() => {
+        if (!state.activeShowId) return;
+        loadShowConfig(state.activeShowId);
+        broadcastUpdate({ withProposals: true });
+    }));
+
     socket.on('admin_load_show', adminAction((data) => {
         loadShowConfig(data.showId);
         state.activeShowId = data.showId;
