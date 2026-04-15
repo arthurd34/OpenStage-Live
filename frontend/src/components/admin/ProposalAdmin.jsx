@@ -195,6 +195,13 @@ const ProposalAdmin = ({ ui, proposals, socket, token, currentScene, hasPoints, 
                                             +{val}
                                         </button>
                                     ))}
+                                    <button
+                                        className="btn-danger btn-small"
+                                        onClick={() => onAddPoints(ans.userName, -1)}
+                                        style={{ fontSize: '0.7rem', padding: '3px 7px', marginLeft: '4px' }}
+                                    >
+                                        -1
+                                    </button>
                                 </div>
                             )}
                         </div>
