@@ -149,18 +149,17 @@ module.exports = {
     },
 
     admin_clear_all_proposals: (socket, io, data, context) => {
-        const { setActiveUsers, setAllProposals, activeUsers, getSyncData } = context;
+        const { setActiveUsers, setAllProposals, setActivePreset, activeUsers, getSyncData } = context;
 
-        // Vide l'historique de chaque utilisateur
         const clearedUsers = activeUsers.map(u => ({ ...u, proposals: [] }));
 
         setActiveUsers(clearedUsers);
         setAllProposals([]);
+        setActivePreset(null);
 
-        io.emit('show_on_screen', null); // Cache l'écran géant
-
+        io.emit('show_on_screen', null);
         io.to('admin_room').emit('admin_sync_proposals', []);
-        io.emit('user_history_update', []); // Vide tous les téléphones
+        io.emit('user_history_update', []);
         io.emit('sync_state', getSyncData());
     },
 
