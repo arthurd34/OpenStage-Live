@@ -47,6 +47,11 @@ const ScreenView = () => {
         if (!htmlString) return null;
         let finalHtml = htmlString;
 
+        // Replace {{asset:ID}} with the actual asset URL
+        finalHtml = finalHtml.replace(/\{\{asset:([^}]+)\}\}/g, (_, assetId) => {
+            return getAssetUrl(assetId) || '';
+        });
+
         Object.keys(params || {}).forEach(key => {
             const regex = new RegExp(`{{${key}}}`, 'g');
             finalHtml = finalHtml.replace(regex, params[key]);
