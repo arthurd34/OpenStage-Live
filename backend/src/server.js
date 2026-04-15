@@ -51,7 +51,8 @@ let state = savedState || {
         whitelist: []
     },
     scores: {},
-    isScoreVisible: false
+    isScoreVisible: false,
+    activePreset: null
 };
 
 if (!state.adminTokens) state.adminTokens = [];
@@ -117,6 +118,7 @@ const getSyncData = () => {
         scores: state.scores,
         isScoreVisible: state.isScoreVisible,
         allProposals: state.allProposals,
+        activePreset: state.activePreset,
         assets: showConfig.assets || [],
         theme: showConfig.theme || {}
     };
@@ -166,6 +168,10 @@ const getContext = () => ({
     },
     setAccessConfig: (val) => {
         state.accessConfig = val;
+        persist();
+    },
+    setActivePreset: (val) => {
+        state.activePreset = val;
         persist();
     }
 });
@@ -370,6 +376,7 @@ io.on('connection', (socket) => {
     socket.on('admin_set_scene', adminAction((data) => {
         state.currentSceneIndex = data.index;
         state.allProposals = [];
+        state.activePreset = null;
         state.activeUsers.forEach(u => { u.proposals = []; });
         persist();
         io.emit('sync_state', getSyncData());

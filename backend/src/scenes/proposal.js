@@ -93,6 +93,7 @@ module.exports = {
     },
 
     admin_set_proposal_winner: (socket, io, data, context) => {
+        const { setActivePreset, getSyncData } = context;
         if (data.action === 'SHOW') {
             const virtualWinner = {
                 id: 'preset-active',
@@ -102,10 +103,14 @@ module.exports = {
                 isWinner: true,
                 isAdmin: true
             };
+            setActivePreset(data.text);
             io.emit('show_on_screen', virtualWinner);
+            io.emit('sync_state', getSyncData());
             io.to('admin_room').emit('admin_preset_active', data.text);
         } else {
+            setActivePreset(null);
             io.emit('show_on_screen', null);
+            io.emit('sync_state', getSyncData());
             io.to('admin_room').emit('admin_preset_active', null);
         }
     },

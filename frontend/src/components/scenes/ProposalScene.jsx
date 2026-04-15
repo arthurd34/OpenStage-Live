@@ -7,6 +7,7 @@ const ProposalScene = ({ socket, name, gameState, history }) => {
 
     const params = gameState?.currentScene?.params ?? {};
     const maxProps = params.maxProposals ?? 3;
+    const presetLabel = params.presetDisplayLabel || t(ui, 'PROPOSAL_DISPLAY_TITLE');
     const isLimitReached = history.length >= maxProps;
 
     const handleSend = () => {
@@ -15,8 +16,29 @@ const ProposalScene = ({ socket, name, gameState, history }) => {
         setProposal('');
     };
 
+    const activePreset = gameState?.activePreset || null;
+
     return (
         <div className="scene-container">
+            {activePreset && (
+                <div style={{
+                    marginBottom: '16px',
+                    padding: '14px 18px',
+                    borderRadius: '10px',
+                    background: 'rgba(245, 158, 11, 0.12)',
+                    border: '2px solid #f59e0b',
+                    textAlign: 'center',
+                    animation: 'fadeIn 0.4s ease'
+                }}>
+                    <small style={{ display: 'block', opacity: 0.6, marginBottom: '4px', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '1px' }}>
+                        {presetLabel}
+                    </small>
+                    <strong style={{ fontSize: '1.1rem', color: '#f59e0b' }}>
+                        {activePreset}
+                    </strong>
+                </div>
+            )}
+
             <div className="input-group">
                 <input
                     value={proposal}
