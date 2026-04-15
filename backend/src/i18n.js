@@ -23,7 +23,7 @@ const translations = {
 
         // --- WAITING SCENE ---
         WAITING_DEFAULT_TITLE: "Attente du prochain jeu...",
-        WAITING_SUBTITLE: "Regardez l'écran de scène !",
+        WAITING_SUBTITLE: "Regardez la scène !",
         WAITING_FOR_START: "Connecté ! Attente du début...",
 
         // --- OVERLAYS & ERRORS ---
@@ -160,7 +160,7 @@ const translations = {
 
         // --- WAITING SCENE ---
         WAITING_DEFAULT_TITLE: "Waiting for the next game...",
-        WAITING_SUBTITLE: "Look at the main screen!",
+        WAITING_SUBTITLE: "Look at the stage!",
         WAITING_FOR_START: "Connected! Waiting to start...",
 
         // --- OVERLAYS & ERRORS ---

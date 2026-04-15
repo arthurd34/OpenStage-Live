@@ -295,7 +295,7 @@ const AdminView = () => {
                         </span>
                     </h3>
 
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px', opacity: state?.isLive ? 1 : 0.4, pointerEvents: state?.isLive ? 'auto' : 'none' }}>
                         {state?.playlist?.map((act, i) => (
                             <button
                                 key={act.id}

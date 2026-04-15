@@ -127,7 +127,9 @@ const getSyncData = () => {
         return {
             ...baseData,
             accessConfig: state.accessConfig,
-            currentScene: {id: 'OFFLINE', type: 'WAITING', params: {titleDisplay: "SHOW_NOT_STARTED"}}
+            currentScene: {id: 'OFFLINE', type: 'WAITING', params: {titleDisplay: "SHOW_NOT_STARTED"}},
+            currentIndex: state.currentSceneIndex,
+            playlist: playlist
         };
     }
 
@@ -352,6 +354,8 @@ io.on('connection', (socket) => {
             state.activeUsers = [];
             state.pendingRequests = [];
             state.scores = {};
+            state.allProposals = [];
+            state.activePreset = null;
             state.accessConfig.whitelist.forEach(c => {
                 c.used = false;
                 c.playerName = '';
@@ -363,6 +367,7 @@ io.on('connection', (socket) => {
         }
         persist();
         io.emit('sync_state', getSyncData());
+        io.to('admin_room').emit('admin_sync_proposals', state.allProposals);
         refreshAdminLists();
     }));
 

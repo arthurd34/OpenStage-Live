@@ -8,6 +8,7 @@ const ProposalScene = ({ socket, name, gameState, history }) => {
     const params = gameState?.currentScene?.params ?? {};
     const maxProps = params.maxProposals ?? 3;
     const presetLabel = params.presetDisplayLabel || t(ui, 'PROPOSAL_DISPLAY_TITLE');
+    const theme = params.titleDisplay || params.theme || null;
     const isLimitReached = history.length >= maxProps;
 
     const handleSend = () => {
@@ -20,6 +21,12 @@ const ProposalScene = ({ socket, name, gameState, history }) => {
 
     return (
         <div className="scene-container">
+            {theme && (
+                <h3 style={{ textAlign: 'center', marginBottom: '16px', opacity: 0.9, lineHeight: 1.3 }}>
+                    {theme}
+                </h3>
+            )}
+
             {activePreset && (
                 <div style={{
                     marginBottom: '16px',

@@ -20,7 +20,7 @@ const WaitingScene = ({ gameState }) => {
             </h2>
 
             <p style={{ opacity: 0.7, fontSize: '1.1rem' }}>
-                {t(ui, 'WAITING_SUBTITLE')}
+                {params.subtitle || t(ui, 'WAITING_SUBTITLE')}
             </p>
 
             {/* Visual feedback for the audience */}

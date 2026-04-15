@@ -112,8 +112,8 @@ const ScreenView = () => {
                     ) : (
                         /* --- DEFAULT FALLBACKS (Scenes like WAITING) --- */
                         <div style={{ textAlign: 'center', width: '100%', animation: 'fadeIn 1s ease', margin: 'auto' }}>
-                            {scene?.type === 'WAITING' ? (
-                                // [comment] Hide text if displayTextOnScreen is false in config.json
+                            {scene.params?.titleDisplay || scene?.type === 'WAITING' ? (
+                                // Hide text if displayTextOnScreen is false in config.json
                                 scene.params?.displayTextOnScreen !== false && (
                                     <>
                                         <h1 className="default-title" style={{ fontSize: '10rem', margin: 0 }}>
